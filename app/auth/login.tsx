@@ -1,11 +1,11 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react-native";
-import { colors, spacing, radius, fontSize } from "@/constants/theme";
-import { API_BASE_URL } from "@/constants/api";
+import { colors, spacing, radius, fontSize } from "../../constants/theme";
+import { API_BASE_URL } from "../../constants/api";
 
 export default function LoginScreen() {
     const [form, setForm]             = useState({ email: "", password: "" });
@@ -54,7 +54,7 @@ export default function LoginScreen() {
 
                 <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
                     <LinearGradient colors={["#4f6af5", "#7c3aed"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.loginBtn}>
-                        <Text style={s.loginBtnText}>{loading ? "Signing in…" : "Sign In"}</Text>
+                        <Text style={s.loginBtnText}>{loading ? "Signing in�" : "Sign In"}</Text>
                     </LinearGradient>
                 </TouchableOpacity>
 

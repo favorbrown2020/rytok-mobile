@@ -1,9 +1,9 @@
-﻿import React from "react";
+import React from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Search, Bell, ShoppingBag } from "lucide-react-native";
 import { router } from "expo-router";
-import { colors, spacing, radius, fontSize } from "@/constants/theme";
+import { colors, spacing, radius, fontSize } from "../../constants/theme";
 
 export default function HomeScreen() {
     return (
@@ -40,7 +40,7 @@ export default function HomeScreen() {
                 {/* Quick actions */}
                 <View style={s.quickActions}>
                     {[
-                        { label: "Hot Deals 🔥", route: "/deals" },
+                        { label: "Hot Deals ??", route: "/deals" },
                         { label: "Sell Item", route: "/sell" },
                     ].map((a) => (
                         <TouchableOpacity
@@ -56,7 +56,7 @@ export default function HomeScreen() {
 
                 {/* Placeholder listings coming soon */}
                 <View style={s.comingSoon}>
-                    <Text style={s.comingSoonText}>🚀 Listings loading soon...</Text>
+                    <Text style={s.comingSoonText}>?? Listings loading soon...</Text>
                     <Text style={s.comingSoonSub}>Connect to your API to show live listings</Text>
                 </View>
             </ScrollView>

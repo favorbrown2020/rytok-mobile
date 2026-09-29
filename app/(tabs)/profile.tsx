@@ -1,14 +1,14 @@
-﻿import React from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { colors, spacing, fontSize, radius } from "@/constants/theme";
+import { colors, spacing, fontSize, radius } from "../../constants/theme";
 
 export default function ProfileScreen() {
     return (
         <SafeAreaView style={s.page}>
             <View style={s.center}>
-                <Text style={s.emoji}>👤</Text>
+                <Text style={s.emoji}>??</Text>
                 <Text style={s.title}>My Account</Text>
                 <TouchableOpacity style={s.btn} onPress={() => router.push("/auth/register")}>
                     <Text style={s.btnText}>Create Account</Text>

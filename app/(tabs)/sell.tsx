@@ -1,13 +1,13 @@
-﻿import React from "react";
+import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, spacing, fontSize } from "@/constants/theme";
+import { colors, spacing, fontSize } from "../../constants/theme";
 
 export default function SellScreen() {
     return (
         <SafeAreaView style={s.page}>
             <View style={s.center}>
-                <Text style={s.emoji}>📦</Text>
+                <Text style={s.emoji}>??</Text>
                 <Text style={s.title}>Sell an Item</Text>
                 <Text style={s.sub}>Create listing screen coming next</Text>
             </View>

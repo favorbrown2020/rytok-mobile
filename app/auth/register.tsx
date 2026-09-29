@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
     View, Text, TextInput, TouchableOpacity,
     ScrollView, StyleSheet, KeyboardAvoidingView, Platform,
@@ -11,8 +11,8 @@ import {
     Tag, Users, Bell, Shield, Star, Headphones,
     Package, TrendingUp, Zap, Globe, BarChart2, Award,
 } from "lucide-react-native";
-import { colors, spacing, radius, fontSize } from "@/constants/theme";
-import { API_BASE_URL } from "@/constants/api";
+import { colors, spacing, radius, fontSize } from "../../constants/theme";
+import { API_BASE_URL } from "../../constants/api";
 
 const ACCOUNT_TYPES = {
     personal: {
@@ -90,7 +90,7 @@ export default function RegisterScreen() {
         finally { setLoading(false); }
     };
 
-    // ── STEP 1: Choose account type ──
+    // -- STEP 1: Choose account type --
     if (step === "choose") {
         return (
             <SafeAreaView style={s.page}>
@@ -171,7 +171,7 @@ export default function RegisterScreen() {
         );
     }
 
-    // ── STEP 2: Registration form ──
+    // -- STEP 2: Registration form --
     return (
         <SafeAreaView style={s.page}>
             <TouchableOpacity style={s.backArrow} onPress={() => setStep("choose")}>
@@ -216,7 +216,7 @@ export default function RegisterScreen() {
 
                     <TouchableOpacity onPress={handleSubmit} disabled={loading} activeOpacity={0.85}>
                         <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.continueBtn}>
-                            <Text style={s.continueBtnText}>{loading ? "Creating account…" : "Create Account"}</Text>
+                            <Text style={s.continueBtnText}>{loading ? "Creating account�" : "Create Account"}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 </ScrollView>
