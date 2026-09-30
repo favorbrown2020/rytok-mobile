@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useCallback } from "react";
 import {
     View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
     ActivityIndicator, Image, Alert, KeyboardAvoidingView, Platform, Switch,
@@ -6,12 +6,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
 import {
-    PlusCircle, Tag, DollarSign, MapPin, AlignLeft,
-    Image as ImageIcon, CheckCircle, LogIn, Sparkles,
+    PlusCircle, Tag, DollarSign, MapPin,
+    Image as ImageIcon, Sparkles, LogIn, Camera, X,
 } from "lucide-react-native";
 import { colors, spacing, radius, fontSize } from "../../constants/theme";
-import { apiFetch, getAuthToken } from "../../constants/api";
+import { API_BASE_URL, apiFetch, getAuthToken } from "../../constants/api";
 
 const CATEGORIES = [
     { id: "11111111-1111-1111-1111-111111111103", name: "Electronics" },
@@ -38,6 +39,7 @@ export default function SellScreen() {
     const [condition, setCondition] = useState("Brand New");
     const [location, setLocation] = useState("Greater Accra • East Legon");
     const [imageUrl, setImageUrl] = useState("");
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [description, setDescription] = useState("");
 
     const [submitting, setSubmitting] = useState(false);
@@ -56,6 +58,60 @@ export default function SellScreen() {
         }, [])
     );
 
+    const pickAndUploadImage = async () => {
+        try {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== "granted") {
+                Alert.alert("Permission needed", "Please grant photo library permission to upload item photos.");
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ["images"],
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]?.uri) {
+                const localUri = result.assets[0].uri;
+                setUploadingImage(true);
+
+                const filename = localUri.split("/").pop() || "upload.jpg";
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+                const formData = new FormData();
+                formData.append("file", {
+                    uri: localUri,
+                    name: filename,
+                    type: type,
+                } as any);
+
+                const t = await getAuthToken();
+                const res = await fetch(`${API_BASE_URL}/api/upload`, {
+                    method: "POST",
+                    headers: {
+                        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+                    },
+                    body: formData,
+                });
+
+                const data = await res.json();
+                if (data.url) {
+                    setImageUrl(data.url);
+                } else {
+                    setImageUrl(localUri);
+                }
+            }
+        } catch (err) {
+            console.error("Image pick error:", err);
+            Alert.alert("Upload error", "Could not upload image. You can also paste an image web link below.");
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
     const handleSubmit = async () => {
         if (!title.trim() || title.trim().length < 5) {
             setError("Title must be at least 5 characters long.");
@@ -73,7 +129,7 @@ export default function SellScreen() {
         }
 
         if (!location.trim()) {
-            setError("Please enter your location.");
+            setError("Please enter your location in Ghana.");
             return;
         }
 
@@ -278,31 +334,58 @@ export default function SellScreen() {
                         <MapPin size={18} color={colors.textMuted} style={s.inputIcon} />
                         <TextInput
                             style={s.input}
-                            placeholder="e.g. Greater Accra • Osu"
+                            placeholder="e.g. Greater Accra • East Legon"
                             placeholderTextColor={colors.textMuted}
                             value={location}
                             onChangeText={(v) => { setLocation(v); setError(""); }}
                         />
                     </View>
 
-                    {/* Image URL */}
-                    <Text style={s.label}>Image URL (optional)</Text>
-                    <View style={s.inputWrap}>
+                    {/* Photo Upload Section */}
+                    <Text style={s.label}>Item Photo</Text>
+                    {imageUrl ? (
+                        <View style={s.imagePreviewWrap}>
+                            <Image source={{ uri: imageUrl }} style={s.imagePreview} resizeMode="cover" />
+                            <TouchableOpacity
+                                style={s.removeImageBtn}
+                                onPress={() => setImageUrl("")}
+                            >
+                                <X size={16} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity
+                            style={s.uploadBox}
+                            onPress={pickAndUploadImage}
+                            disabled={uploadingImage}
+                            activeOpacity={0.8}
+                        >
+                            {uploadingImage ? (
+                                <ActivityIndicator size="small" color="#3b82f6" />
+                            ) : (
+                                <>
+                                    <View style={s.uploadCircle}>
+                                        <Camera size={24} color="#3b82f6" />
+                                    </View>
+                                    <Text style={s.uploadTitle}>Choose Photo from Phone</Text>
+                                    <Text style={s.uploadSub}>PNG, JPG up to 10MB</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    )}
+
+                    {/* Fallback image URL */}
+                    <View style={[s.inputWrap, { marginTop: 10 }]}>
                         <ImageIcon size={18} color={colors.textMuted} style={s.inputIcon} />
                         <TextInput
                             style={s.input}
-                            placeholder="https://ik.imagekit.io/... or paste web link"
+                            placeholder="Or paste direct image URL"
                             placeholderTextColor={colors.textMuted}
                             autoCapitalize="none"
                             value={imageUrl}
                             onChangeText={setImageUrl}
                         />
                     </View>
-                    {imageUrl ? (
-                        <View style={s.imagePreviewWrap}>
-                            <Image source={{ uri: imageUrl }} style={s.imagePreview} resizeMode="cover" />
-                        </View>
-                    ) : null}
 
                     {/* Description */}
                     <Text style={s.label}>Item Description (min 20 characters) *</Text>
@@ -369,8 +452,13 @@ const s = StyleSheet.create({
     conditionBtnSelected: { backgroundColor: "rgba(59, 130, 246, 0.2)", borderColor: "#3b82f6" },
     conditionText: { color: colors.textMuted, fontSize: 13, fontWeight: "600" },
     conditionTextSelected: { color: "#60a5fa", fontWeight: "700" },
-    imagePreviewWrap: { width: "100%", height: 160, borderRadius: radius.md, overflow: "hidden", marginBottom: 12, backgroundColor: "#0f172a" },
-    imagePreview: { width: "100%", height: 160 },
+    uploadBox: { backgroundColor: "rgba(255, 255, 255, 0.03)", borderWidth: 1.5, borderColor: "rgba(59, 130, 246, 0.3)", borderStyle: "dashed", borderRadius: radius.md, paddingVertical: 28, alignItems: "center", justifyContent: "center" },
+    uploadCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(59, 130, 246, 0.15)", alignItems: "center", justifyContent: "center", marginBottom: 10 },
+    uploadTitle: { fontSize: 15, fontWeight: "700", color: colors.textPrimary, marginBottom: 2 },
+    uploadSub: { fontSize: 12, color: colors.textMuted },
+    imagePreviewWrap: { width: "100%", height: 180, borderRadius: radius.md, overflow: "hidden", position: "relative", backgroundColor: "#0f172a" },
+    imagePreview: { width: "100%", height: 180 },
+    removeImageBtn: { position: "absolute", top: 10, right: 10, backgroundColor: "rgba(0,0,0,0.6)", width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
     textAreaWrap: { marginBottom: 16 },
     textArea: { backgroundColor: colors.bgInput, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: 16, color: colors.textPrimary, fontSize: 15, minHeight: 110 },
     submitBtn: { borderRadius: radius.md, paddingVertical: 16, alignItems: "center", justifyContent: "center" },
