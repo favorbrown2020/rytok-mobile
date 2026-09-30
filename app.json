@@ -18,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#0b0e1a"
       },
       "package": "com.rytok.mobile",
@@ -38,3 +38,4 @@
     }
   }
 }
+
