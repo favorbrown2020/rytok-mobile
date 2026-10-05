@@ -1131,33 +1131,33 @@ export default function SellScreen() {
     const renderAiUpload = () => (
         <ScrollView style={s.stepBody} contentContainerStyle={{paddingBottom:140,padding:16}} showsVerticalScrollIndicator={false}>
             <Text style={s.stepTitle}>Upload a Photo</Text>
-            <Text style={s.stepSub}>Take or choose a clear photo of your item — our AI will do the rest</Text>
+            <Text style={s.stepSub}>Take or choose a clear photo — AI will fill in all the details</Text>
 
-            {!aiImage ? (
-                <View style={ai.uploadZone}>
-                    <LinearGradient colors={["#EEF2FF","rgba(99,102,241,0.04)"]} style={ai.uploadInner} start={{x:0,y:0}} end={{x:0,y:1}}>
-                        <View style={ai.uploadIconCircle}><Sparkles size={32} color="#6366F1"/></View>
-                        <Text style={ai.uploadTitle}>AI Photo Scan</Text>
-                        <Text style={ai.uploadSub}>Our AI will analyze your photo and fill in all the details</Text>
-                        <View style={ai.uploadBtns}>
-                            <TouchableOpacity style={ai.uploadBtn} onPress={()=>pickAiMainImage(true)} activeOpacity={0.85}>
-                                <Camera size={18} color="#fff"/><Text style={ai.uploadBtnTxt}>Take Photo</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[ai.uploadBtn,ai.uploadBtnGallery]} onPress={()=>pickAiMainImage(false)} activeOpacity={0.85}>
-                                <Upload size={18} color="#6366F1"/><Text style={[ai.uploadBtnTxt,ai.uploadBtnTxtGallery]}>Gallery</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </LinearGradient>
+            {/* Upload Buttons — always visible */}
+            <View style={ai.uploadZone}>
+                <View style={ai.uploadIconCircle}><Sparkles size={32} color="#6366F1"/></View>
+                <Text style={ai.uploadTitle}>AI Photo Scan</Text>
+                <Text style={ai.uploadSub}>Our AI analyzes your photo and auto-fills the listing</Text>
+                <View style={ai.uploadBtns}>
+                    <TouchableOpacity style={ai.uploadBtn} onPress={()=>pickAiMainImage(true)} activeOpacity={0.85}>
+                        <Camera size={18} color="#fff"/><Text style={ai.uploadBtnTxt}>Take Photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[ai.uploadBtn,ai.uploadBtnGallery]} onPress={()=>pickAiMainImage(false)} activeOpacity={0.85}>
+                        <Upload size={18} color="#6366F1"/><Text style={[ai.uploadBtnTxt,ai.uploadBtnTxtGallery]}>Gallery</Text>
+                    </TouchableOpacity>
                 </View>
-            ) : (
+            </View>
+
+            {/* Preview shown after selecting */}
+            {aiImage ? (
                 <View style={ai.previewWrap}>
-                    <Image source={{uri:aiImage.uri}} style={ai.previewImg}/>
+                    <Image source={{uri:aiImage.uri}} style={ai.previewImg} resizeMode="cover"/>
                     <TouchableOpacity style={ai.previewChange} onPress={()=>setAiImage(null)} activeOpacity={0.8}>
-                        <RefreshCw size={14} color="#fff"/><Text style={ai.previewChangeTxt}>Change</Text>
+                        <RefreshCw size={14} color="#fff"/><Text style={ai.previewChangeTxt}>Change Photo</Text>
                     </TouchableOpacity>
                     <View style={ai.previewBadge}><Sparkles size={12} color="#fff"/><Text style={ai.previewBadgeTxt}>Main Photo</Text></View>
                 </View>
-            )}
+            ) : null}
 
             {/* Extra photos */}
             {aiImage && (
@@ -1194,7 +1194,7 @@ export default function SellScreen() {
         </ScrollView>
     );
 
-    // AI Step B: Scanning animation
+        // AI Step B: Scanning animation
     const renderAiScanning = () => (
         <View style={ai.scanningRoot}>
             <View style={ai.scanningCard}>
@@ -1720,8 +1720,8 @@ const ai = StyleSheet.create({
     modeBtnTxt:        { fontSize:15, fontWeight:"700", color:"#fff" },
     modeBtnTxtManual:  { color:"#6366F1" },
     // Upload
-    uploadZone:        { borderRadius:16, overflow:"hidden", borderWidth:2, borderColor:"#6366F1", borderStyle:"dashed", marginBottom:16 },
-    uploadInner:       { padding:32, alignItems:"center", gap:12 },
+    uploadZone:        { borderRadius:16, borderWidth:2, borderColor:"#6366F1", marginBottom:16, backgroundColor:"#EEF2FF", padding:24, alignItems:"center", gap:12 },
+    uploadInner:       { padding:0 }, /* deprecated - kept for compat */
     uploadIconCircle:  { width:70, height:70, borderRadius:35, backgroundColor:"#fff", alignItems:"center", justifyContent:"center", elevation:3 },
     uploadTitle:       { fontSize:18, fontWeight:"800", color:"#1a1a2e" },
     uploadSub:         { fontSize:13, color:"#6c757d", textAlign:"center", lineHeight:18 },
@@ -1731,7 +1731,7 @@ const ai = StyleSheet.create({
     uploadBtnTxt:      { fontSize:14, fontWeight:"700", color:"#fff" },
     uploadBtnTxtGallery:{ color:"#6366F1" },
     previewWrap:       { borderRadius:16, overflow:"hidden", marginBottom:8, position:"relative", width:"100%" },
-    previewImg:        { width:"100%", height:300, borderRadius:16, backgroundColor:"#eee" },
+    previewImg:        { width:"100%", aspectRatio:1.4, borderRadius:16, backgroundColor:"#eee" },
     previewChange:     { position:"absolute", top:12, right:12, flexDirection:"row", alignItems:"center", gap:6, backgroundColor:"rgba(0,0,0,0.6)", borderRadius:20, paddingHorizontal:12, paddingVertical:6 },
     previewChangeTxt:  { fontSize:12, fontWeight:"700", color:"#fff" },
     previewBadge:      { position:"absolute", top:12, left:12, flexDirection:"row", alignItems:"center", gap:6, backgroundColor:"#6366F1", borderRadius:20, paddingHorizontal:12, paddingVertical:6 },
