@@ -9,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem  from "expo-file-system";
 import {
     PlusCircle, Tag, MapPin, Camera, Upload, X, ChevronRight,
     ChevronLeft, ArrowLeftRight, Clock, CheckCircle2, Image as ImageIcon,
@@ -472,17 +473,22 @@ export default function SellScreen() {
         }
     };
 
-    // ── AI: Run Gemini Vision scan ────────────────────────────────────────────
+    // ── AI: Run Gemini Vision scan (base64 → JSON, avoids RN FormData issues) ──
     const runAiScan = async () => {
         if (!aiImage) return;
         setAiStep('scanning');
         setAiError('');
         try {
-            const fd = new FormData();
-            const ext = aiImage.uri.split('.').pop() || 'jpg';
-            fd.append('image', { uri: aiImage.uri, name: `scan.${ext}`, type: `image/${ext}` } as any);
-            const res = await fetch(`http://${DEV_IP}:3000/api/ai/analyze-listing-image`, {
-                method: 'POST', body: fd,
+            // Read image as base64 using expo-file-system (reliable in RN)
+            const base64 = await FileSystem.readAsStringAsync(aiImage.uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            const ext = (aiImage.uri.split('.').pop() || 'jpg').toLowerCase();
+            const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+            const res = await fetch(`http://${DEV_IP}:3000/api/ai/analyze-listing-image-base64`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64, mimeType }),
             });
             const data = await res.json();
             if (!res.ok || !data.analysis) throw new Error(data.error || 'AI scan failed');
@@ -1724,8 +1730,8 @@ const ai = StyleSheet.create({
     uploadBtnGallery:  { backgroundColor:"#EEF2FF", borderWidth:1, borderColor:"#6366F1" },
     uploadBtnTxt:      { fontSize:14, fontWeight:"700", color:"#fff" },
     uploadBtnTxtGallery:{ color:"#6366F1" },
-    previewWrap:       { borderRadius:16, overflow:"hidden", marginBottom:8, position:"relative" },
-    previewImg:        { width:"100%", height:280, borderRadius:16 },
+    previewWrap:       { borderRadius:16, overflow:"hidden", marginBottom:8, position:"relative", width:"100%" },
+    previewImg:        { width:"100%", height:300, borderRadius:16, backgroundColor:"#eee" },
     previewChange:     { position:"absolute", top:12, right:12, flexDirection:"row", alignItems:"center", gap:6, backgroundColor:"rgba(0,0,0,0.6)", borderRadius:20, paddingHorizontal:12, paddingVertical:6 },
     previewChangeTxt:  { fontSize:12, fontWeight:"700", color:"#fff" },
     previewBadge:      { position:"absolute", top:12, left:12, flexDirection:"row", alignItems:"center", gap:6, backgroundColor:"#6366F1", borderRadius:20, paddingHorizontal:12, paddingVertical:6 },
