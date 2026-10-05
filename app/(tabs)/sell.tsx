@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
     ActivityIndicator, Image, Alert, KeyboardAvoidingView, Platform, Modal,
-    Switch,
+    Switch, Animated, Easing,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -343,6 +343,51 @@ export default function SellScreen() {
     const [aiSpecs, setAiSpecs]           = useState<Record<string,string>>({});
 
     const setAiField = (k: string, v: any) => setAiFormRaw(p => ({ ...p, [k]: v }));
+
+    // ── Scanning animation refs ────────────────────────────────────────────────
+    const scanPulse1  = React.useRef(new Animated.Value(1)).current;
+    const scanPulse2  = React.useRef(new Animated.Value(1)).current;
+    const scanPulse3  = React.useRef(new Animated.Value(1)).current;
+    const scanLine    = React.useRef(new Animated.Value(0)).current;
+    const scanRotate  = React.useRef(new Animated.Value(0)).current;
+    const scanOpacity = React.useRef(new Animated.Value(0)).current;
+
+    React.useEffect(() => {
+        if (aiStep === 'scanning') {
+            // Fade in
+            Animated.timing(scanOpacity,{toValue:1,duration:400,useNativeDriver:true}).start();
+            // Pulse rings
+            const pulse = (ref: Animated.Value, delay: number) =>
+                Animated.loop(Animated.sequence([
+                    Animated.delay(delay),
+                    Animated.timing(ref,{toValue:1.6,duration:900,easing:Easing.out(Easing.ease),useNativeDriver:true}),
+                    Animated.timing(ref,{toValue:1,duration:900,easing:Easing.in(Easing.ease),useNativeDriver:true}),
+                ])).start();
+            pulse(scanPulse1, 0);
+            pulse(scanPulse2, 300);
+            pulse(scanPulse3, 600);
+            // Rotating border
+            Animated.loop(Animated.timing(scanRotate,{toValue:1,duration:2000,easing:Easing.linear,useNativeDriver:true})).start();
+            // Scan line sweep
+            Animated.loop(Animated.sequence([
+                Animated.timing(scanLine,{toValue:1,duration:1500,easing:Easing.linear,useNativeDriver:true}),
+                Animated.timing(scanLine,{toValue:0,duration:0,useNativeDriver:true}),
+            ])).start();
+        } else {
+            scanOpacity.setValue(0);
+            scanPulse1.setValue(1); scanPulse2.setValue(1); scanPulse3.setValue(1);
+            scanLine.setValue(0); scanRotate.setValue(0);
+        }
+    }, [aiStep]);
+
+    // ── Auto-scan when image selected ─────────────────────────────────────────
+    React.useEffect(() => {
+        if (aiImage && aiStep === 'upload') {
+            // Small delay so user sees the preview before scanning starts
+            const t = setTimeout(() => { runAiScan(); }, 800);
+            return () => clearTimeout(t);
+        }
+    }, [aiImage]);
 
     const setField = (k: string, v: any) => setFormRaw(p => ({ ...p, [k]: v }));
 
@@ -1133,20 +1178,22 @@ export default function SellScreen() {
             <Text style={s.stepTitle}>Upload a Photo</Text>
             <Text style={s.stepSub}>Take or choose a clear photo — AI will fill in all the details</Text>
 
-            {/* Upload Buttons — always visible */}
-            <View style={ai.uploadZone}>
-                <View style={ai.uploadIconCircle}><Sparkles size={32} color="#6366F1"/></View>
-                <Text style={ai.uploadTitle}>AI Photo Scan</Text>
-                <Text style={ai.uploadSub}>Our AI analyzes your photo and auto-fills the listing</Text>
-                <View style={ai.uploadBtns}>
-                    <TouchableOpacity style={ai.uploadBtn} onPress={()=>pickAiMainImage(true)} activeOpacity={0.85}>
-                        <Camera size={18} color="#fff"/><Text style={ai.uploadBtnTxt}>Take Photo</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[ai.uploadBtn,ai.uploadBtnGallery]} onPress={()=>pickAiMainImage(false)} activeOpacity={0.85}>
-                        <Upload size={18} color="#6366F1"/><Text style={[ai.uploadBtnTxt,ai.uploadBtnTxtGallery]}>Gallery</Text>
-                    </TouchableOpacity>
+            {/* Upload Buttons — hidden once image is selected */}
+            {!aiImage && (
+                <View style={ai.uploadZone}>
+                    <View style={ai.uploadIconCircle}><Sparkles size={32} color="#6366F1"/></View>
+                    <Text style={ai.uploadTitle}>AI Photo Scan</Text>
+                    <Text style={ai.uploadSub}>Our AI analyzes your photo and auto-fills the listing</Text>
+                    <View style={ai.uploadBtns}>
+                        <TouchableOpacity style={ai.uploadBtn} onPress={()=>pickAiMainImage(true)} activeOpacity={0.85}>
+                            <Camera size={18} color="#fff"/><Text style={ai.uploadBtnTxt}>Take Photo</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[ai.uploadBtn,ai.uploadBtnGallery]} onPress={()=>pickAiMainImage(false)} activeOpacity={0.85}>
+                            <Upload size={18} color="#6366F1"/><Text style={[ai.uploadBtnTxt,ai.uploadBtnTxtGallery]}>Gallery</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
+            )}
 
             {/* Preview shown after selecting */}
             {aiImage ? (
@@ -1183,133 +1230,272 @@ export default function SellScreen() {
                 </View>
             )}
 
-            {aiImage && (
-                <TouchableOpacity style={ai.scanBtn} onPress={runAiScan} activeOpacity={0.88}>
-                    <LinearGradient colors={["#6366F1","#4338CA"]} style={ai.scanBtnGrad} start={{x:0,y:0}} end={{x:1,y:0}}>
-                        <Sparkles size={20} color="#fff"/>
-                        <Text style={ai.scanBtnTxt}>Analyze with AI</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-            )}
+            {/* Auto-scan starts automatically when image is selected */}
         </ScrollView>
     );
 
-        // AI Step B: Scanning animation
-    const renderAiScanning = () => (
-        <View style={ai.scanningRoot}>
-            <View style={ai.scanningCard}>
-                <View style={ai.scanningIconWrap}>
-                    <View style={ai.scanningPulse}/>
-                    <Sparkles size={48} color="#6366F1"/>
-                </View>
-                <Text style={ai.scanningTitle}>AI is analyzing your photo...</Text>
-                <Text style={ai.scanningSub}>Identifying product, specs, and pricing</Text>
-                <ActivityIndicator size="large" color="#6366F1" style={{marginTop:24}}/>
-                <View style={ai.scanningSteps}>
-                    {["🔍 Identifying product","📋 Extracting specifications","💰 Estimating market price","✍️ Writing description"].map((s,i)=>(
-                        <View key={i} style={ai.scanningStepRow}>
-                            <View style={ai.scanningStepDot}/>
-                            <Text style={ai.scanningStepTxt}>{s}</Text>
+        // AI Step B: Scanning animation — rich animated visual
+    const renderAiScanning = () => {
+        const spinInterpolate = scanRotate.interpolate({ inputRange:[0,1], outputRange:["0deg","360deg"] });
+        const lineY = scanLine.interpolate({ inputRange:[0,1], outputRange:[0, 260] });
+        const SCAN_STEPS = [
+            { icon:"🔍", label:"Identifying product & brand" },
+            { icon:"📋", label:"Extracting specifications" },
+            { icon:"💰", label:"Estimating market price (GHS)" },
+            { icon:"✍️", label:"Writing listing description" },
+        ];
+        return (
+            <View style={ai.scanningRoot}>
+                {/* Photo preview with scan overlay */}
+                {aiImage && (
+                    <View style={ai.scanImgWrap}>
+                        <Image source={{uri:aiImage.uri}} style={ai.scanImg} resizeMode="cover"/>
+                        {/* Scan line sweeping over image */}
+                        <Animated.View style={[ai.scanLineAnim, {transform:[{translateY:lineY}]}]}/>
+                        {/* Corner brackets */}
+                        <View style={[ai.corner, ai.cornerTL]}/><View style={[ai.corner, ai.cornerTR]}/>
+                        <View style={[ai.corner, ai.cornerBL]}/><View style={[ai.corner, ai.cornerBR]}/>
+                        {/* Spinning ring overlay */}
+                        <View style={ai.scanCenter}>
+                            <Animated.View style={[ai.spinRing, {transform:[{rotate:spinInterpolate}]}]}/>
+                            <View style={ai.scanIconInner}><Sparkles size={26} color="#fff"/></View>
                         </View>
-                    ))}
+                        {/* Pulsing label */}
+                        <View style={ai.scanBadgeWrap}>
+                            <ActivityIndicator size="small" color="#fff" style={{marginRight:6}}/>
+                            <Text style={ai.scanBadgeTxt}>AI Scanning...</Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Progress card */}
+                <View style={ai.scanningCard}>
+                    <Text style={ai.scanningTitle}>Analyzing your photo</Text>
+                    <Text style={ai.scanningSub}>This takes just a few seconds</Text>
+                    {/* Step indicators */}
+                    <View style={ai.scanningSteps}>
+                        {SCAN_STEPS.map((step, i) => (
+                            <View key={i} style={ai.scanningStepRow}>
+                                <Text style={{fontSize:16}}>{step.icon}</Text>
+                                <Text style={ai.scanningStepTxt}>{step.label}</Text>
+                                <ActivityIndicator size="small" color="#6366F1" style={{marginLeft:"auto"}}/>
+                            </View>
+                        ))}
+                    </View>
                 </View>
             </View>
-        </View>
-    );
+        );
+    };
 
-    // AI Step C: Review & Edit prefilled fields
+    // AI Step C: Review & Edit — matches web format exactly
     const selectedAiRegion = GHANA_REGIONS.find(r=>r.value===aiForm.locationRegion);
     const aiCityList = selectedAiRegion?.districts || [];
 
-    const renderAiReview = () => {
-        const confidence = aiAnalysis?.confidence || 0;
-        const pct = Math.round(confidence * 100);
-        const confColor = pct >= 80 ? '#10B981' : pct >= 60 ? '#F59E0B' : '#EF4444';
-        return (
-            <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS==="ios"?"padding":undefined} keyboardVerticalOffset={100}>
-                <ScrollView style={{flex:1}} contentContainerStyle={{padding:16,paddingBottom:60}} showsVerticalScrollIndicator={false}>
-                    {/* AI result banner */}
-                    {aiAnalysis ? (
-                        <View style={[ai.resultBanner,{borderColor:confColor+'40',backgroundColor:confColor+'0F'}]}>
-                            <View style={ai.resultBannerLeft}>
-                                <Zap size={18} color={confColor}/>
-                                <Text style={[ai.resultBannerTxt,{color:confColor}]}>AI filled {pct}% — review and edit below</Text>
+    // Accessory + Feature options (matching web version)
+    const ACCESSORY_OPTIONS = ["Original Box","Charger","Case","Screen Protector","Earphones","Manual","All Accessories"];
+    const FEATURE_OPTIONS   = ["5G","Wi-Fi 7","Bluetooth 5.4","NFC","Face ID","Fingerprint",
+                               "Water Resistant (IP68)","Dual SIM","eSIM","Fast Charging","Wireless Charging","IR Blaster"];
+    const [aiAccessories, setAiAccessories] = React.useState<string[]>([]);
+    const [aiFeatures,    setAiFeatures]    = React.useState<string[]>([]);
+
+    // Pre-select AI-detected features on review load
+    React.useEffect(() => {
+        if (aiStep === 'review' && aiAnalysis?.features) {
+            setAiFeatures(aiAnalysis.features.filter((f:string) =>
+                FEATURE_OPTIONS.some(o => o.toLowerCase().includes(f.toLowerCase()) || f.toLowerCase().includes(o.toLowerCase()))
+            ));
+        }
+    }, [aiStep]);
+
+    const toggleChip = (val: string, list: string[], setList: (v:string[])=>void) => {
+        setList(list.includes(val) ? list.filter(x=>x!==val) : [...list, val]);
+    };
+
+    const SPEC_LABELS: Record<string,string> = {
+        storage:"Storage", ram:"RAM", screenSize:"Screen Size", displayType:"Display Type",
+        operatingSystem:"Operating System", battery:"Battery", mainCamera:"Main Camera",
+        selfieCamera:"Selfie Camera", processor:"Processor", simType:"SIM Type",
+        cardSlot:"Card Slot", color:"Color", year:"Year", mileage:"Mileage (km)",
+        bodyType:"Body Type", transmission:"Transmission", fuelType:"Fuel Type", gpu:"GPU",
+    };
+
+    const renderAiReview = () => (
+        <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS==="ios"?"padding":undefined} keyboardVerticalOffset={100}>
+            <ScrollView style={{flex:1}} contentContainerStyle={{paddingBottom:80}} showsVerticalScrollIndicator={false}>
+
+                {/* ── Photos row ── */}
+                <View style={air.photosSection}>
+                    <View style={air.photosHeader}>
+                        <Text style={air.photosLabel}>Photos</Text>
+                        <View style={air.photosBadge}><Text style={air.photosBadgeTxt}>1/10</Text></View>
+                        <Text style={air.photosSlotsLeft}>{9-aiExtraImages.length} slots left</Text>
+                    </View>
+                    <View style={air.photosRow}>
+                        {/* Main image */}
+                        <View style={air.mainThumb}>
+                            {aiImage && <Image source={{uri:aiImage.uri}} style={air.mainThumbImg} resizeMode="cover"/>}
+                            <TouchableOpacity style={air.mainThumbX} onPress={()=>setAiImage(null)}><X size={10} color="#fff" strokeWidth={3}/></TouchableOpacity>
+                            <View style={air.mainThumbBadge}><Text style={air.mainThumbBadgeTxt}>Main</Text></View>
+                        </View>
+                        {/* Camera slot */}
+                        <TouchableOpacity style={air.photoSlot} onPress={()=>pickAiMainImage(true)} activeOpacity={0.8}>
+                            <Camera size={20} color="#6366F1"/>
+                            <Text style={air.photoSlotTxt}>Camera</Text>
+                        </TouchableOpacity>
+                        {/* Gallery slot */}
+                        <TouchableOpacity style={air.photoSlot} onPress={pickAiExtraImages} activeOpacity={0.8}>
+                            <Upload size={20} color="#6366F1"/>
+                            <Text style={air.photoSlotTxt}>Upload</Text>
+                        </TouchableOpacity>
+                        {/* Extra images */}
+                        {aiExtraImages.slice(0,3).map(img=>(
+                            <View key={img.id} style={air.extraThumb}>
+                                <Image source={{uri:img.uri}} style={air.mainThumbImg} resizeMode="cover"/>
+                                <TouchableOpacity style={air.mainThumbX} onPress={()=>setAiExtraImages(p=>p.filter(i=>i.id!==img.id))}><X size={10} color="#fff" strokeWidth={3}/></TouchableOpacity>
                             </View>
-                        </View>
-                    ) : aiError ? (
-                        <View style={ai.errorBanner}>
-                            <Text style={ai.errorBannerTxt}>⚠️ {aiError} — please fill in manually below.</Text>
-                        </View>
+                        ))}
+                    </View>
+                    <Text style={air.photosHint}>Add more angles, labels or accessories — up to 10 photos total</Text>
+                </View>
+
+                {/* ── Category row ── */}
+                <View style={air.categoryRow}>
+                    <Text style={air.categoryName}>{aiForm.category ? aiForm.category.charAt(0).toUpperCase()+aiForm.category.slice(1).replace(/-/g,' ') : "Uncategorized"}</Text>
+                    <TouchableOpacity onPress={()=>setAiField('category','')} activeOpacity={0.7}>
+                        <Text style={air.changeCategory}>Change Category</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={{paddingHorizontal:16}}>
+                    {/* ── AI confidence banner ── */}
+                    {aiAnalysis && (() => {
+                        const pct = Math.round((aiAnalysis.confidence||0)*100);
+                        const col = pct>=80?'#10B981':pct>=60?'#F59E0B':'#EF4444';
+                        return (
+                            <View style={[air.confBanner,{borderColor:col+'40',backgroundColor:col+'0F'}]}>
+                                <Zap size={14} color={col}/>
+                                <Text style={[air.confTxt,{color:col}]}>AI filled {pct}% — review and edit below</Text>
+                            </View>
+                        );
+                    })()}
+                    {aiError ? (
+                        <View style={air.errBanner}><Text style={air.errTxt}>⚠️ {aiError} — please fill in manually.</Text></View>
                     ) : null}
 
-                    {/* Title */}
-                    <Text style={d.sectionTitle}>Ad Title *</Text>
-                    <TextInput style={ai.reviewInput} value={aiForm.title} onChangeText={v=>setAiField('title',v)} placeholder="e.g. Samsung Galaxy S24 Ultra 256GB" placeholderTextColor="#bbb" maxLength={80}/>
-                    <Text style={s.charCount}>{aiForm.title.length}/80</Text>
-
-                    {/* Price */}
-                    <Text style={[d.sectionTitle,{marginTop:16}]}>Price (GHS) *</Text>
+                    {/* ── Price ── */}
+                    <Text style={air.fieldLabel}>Price (GHS)</Text>
                     {aiAnalysis?.price_min && aiAnalysis?.price_max && (
-                        <View style={ai.priceSuggest}>
-                            <Zap size={13} color="#F59E0B"/>
-                            <Text style={ai.priceSuggestTxt}>AI suggests: GHC {aiAnalysis.price_min.toLocaleString()} – {aiAnalysis.price_max.toLocaleString()}</Text>
+                        <View style={air.priceSuggest}><Zap size={12} color="#F59E0B"/>
+                            <Text style={air.priceSuggestTxt}>AI suggests: GHC {aiAnalysis.price_min.toLocaleString()} – {aiAnalysis.price_max.toLocaleString()}</Text>
                         </View>
                     )}
-                    <View style={d.priceRow}>
-                        <View style={d.pricePrefix}><Text style={d.prefixTxt}>GHC</Text></View>
-                        <TextInput style={d.priceInput} keyboardType="numeric" value={aiForm.price} onChangeText={v=>setAiField('price',v)} placeholder="0" placeholderTextColor="#aaa"/>
+                    <View style={air.priceRow}>
+                        <View style={air.pricePrefix}><Text style={air.prefixTxt}>Ghc</Text></View>
+                        <TextInput style={air.priceInput} keyboardType="numeric" value={aiForm.price} onChangeText={v=>setAiField('price',v)} placeholder="0" placeholderTextColor="#aaa"/>
                     </View>
 
-                    {/* Brand / Model */}
-                    <View style={{flexDirection:'row',gap:12,marginTop:16}}>
-                        <View style={{flex:1}}>
-                            <Text style={d.fieldLabel}>Brand</Text>
-                            <TextInput style={ai.reviewInputSm} value={aiForm.brand} onChangeText={v=>setAiField('brand',v)} placeholder="e.g. Samsung" placeholderTextColor="#bbb"/>
+                    {/* ── Category Details section ── */}
+                    <Text style={air.sectionHeading}>
+                        {aiForm.category ? aiForm.category.charAt(0).toUpperCase()+aiForm.category.slice(1).replace(/-/g,' ') : "Item"} Details
+                    </Text>
+
+                    <View style={air.detailsCard}>
+                        {/* Ad Title */}
+                        <View style={air.fieldBlock}>
+                            <Text style={air.fieldLabel}>Ad Title <Text style={{color:'#EF4444'}}>*</Text></Text>
+                            <TextInput style={air.fieldInput} value={aiForm.title} onChangeText={v=>setAiField('title',v)} placeholder="e.g. Samsung Galaxy Note 10 128GB" placeholderTextColor="#bbb" maxLength={80}/>
+                            <Text style={air.charCount}>{aiForm.title.length}/80</Text>
                         </View>
-                        <View style={{flex:1}}>
-                            <Text style={d.fieldLabel}>Model</Text>
-                            <TextInput style={ai.reviewInputSm} value={aiForm.model} onChangeText={v=>setAiField('model',v)} placeholder="e.g. Galaxy S24" placeholderTextColor="#bbb"/>
+
+                        {/* Brand */}
+                        <View style={air.fieldBlock}>
+                            <Text style={air.fieldLabel}>Brand <Text style={{color:'#EF4444'}}>*</Text></Text>
+                            <TextInput style={air.fieldInput} value={aiForm.brand} onChangeText={v=>setAiField('brand',v)} placeholder="e.g. Samsung" placeholderTextColor="#bbb"/>
+                        </View>
+
+                        {/* Model */}
+                        <View style={air.fieldBlock}>
+                            <Text style={air.fieldLabel}>Model <Text style={{color:'#EF4444'}}>*</Text></Text>
+                            <TextInput style={air.fieldInput} value={aiForm.model} onChangeText={v=>setAiField('model',v)} placeholder="e.g. Galaxy Note 10" placeholderTextColor="#bbb"/>
+                        </View>
+
+                        {/* Condition */}
+                        <View style={air.fieldBlock}>
+                            <Text style={air.fieldLabel}>Condition <Text style={{color:'#EF4444'}}>*</Text></Text>
+                            <View style={air.chipRow}>
+                                {['Brand New','Used - Like New','Used - Good','Used - Fair','Foreign Used'].map(opt=>{
+                                    const active=aiForm.condition===opt;
+                                    return (<TouchableOpacity key={opt} style={[air.chip,active&&air.chipActive]} onPress={()=>setAiField('condition',opt)} activeOpacity={0.75}>
+                                        <Text style={[air.chipTxt,active&&air.chipTxtActive]}>{opt}</Text>
+                                    </TouchableOpacity>);
+                                })}
+                            </View>
+                        </View>
+
+                        {/* AI Spec fields — rendered per detected key */}
+                        {Object.entries(aiSpecs).map(([k,v])=>{
+                            const label = SPEC_LABELS[k] || k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase());
+                            return (
+                                <View key={k} style={air.fieldBlock}>
+                                    <Text style={air.fieldLabel}>{label}</Text>
+                                    <View style={air.fieldInputRow}>
+                                        <TextInput style={[air.fieldInput,{flex:1}]} value={v as string} onChangeText={nv=>setAiSpecs(p=>({...p,[k]:nv}))} placeholderTextColor="#bbb"/>
+                                        {['displayType','simType','cardSlot','bodyType','transmission','fuelType','color','operatingSystem'].includes(k) && (
+                                            <ChevronRight size={16} color="#aaa" style={{marginLeft:8}}/>
+                                        )}
+                                    </View>
+                                </View>
+                            );
+                        })}
+
+                        {/* Under Warranty toggle */}
+                        <View style={air.toggleRow}>
+                            <Text style={air.fieldLabel}>Under Warranty</Text>
+                            <TouchableOpacity style={[s.toggle, aiForm.is_negotiable&&s.toggleOn]}
+                                onPress={()=>setAiField('under_warranty', !(aiForm as any).under_warranty)} activeOpacity={0.85}>
+                                <View style={[s.toggleThumb, aiForm.is_negotiable&&s.toggleThumbOn]}/>
+                            </TouchableOpacity>
                         </View>
                     </View>
 
-                    {/* Condition */}
-                    <Text style={[d.fieldLabel,{marginTop:16}]}>Condition *</Text>
-                    <View style={d.chipPool}>
-                        {['Brand New','Used - Like New','Used - Good','Used - Fair','Foreign Used'].map(opt=>{
-                            const active = aiForm.condition===opt;
-                            return (<TouchableOpacity key={opt} style={[d.chip,active&&d.chipActive]} onPress={()=>setAiField('condition',opt)} activeOpacity={0.75}><Text style={[d.chipTxt,active&&d.chipTxtActive]}>{opt}</Text></TouchableOpacity>);
+                    {/* ── Accessories ── */}
+                    <Text style={air.sectionHeading}>Accessories</Text>
+                    <View style={air.chipPool}>
+                        {ACCESSORY_OPTIONS.map(opt=>{
+                            const active=aiAccessories.includes(opt);
+                            return (<TouchableOpacity key={opt} style={[air.chip,active&&air.chipActive]} onPress={()=>toggleChip(opt,aiAccessories,setAiAccessories)} activeOpacity={0.75}>
+                                {active&&<Text style={{color:'#6366F1',marginRight:4}}>✓ </Text>}
+                                <Text style={[air.chipTxt,active&&air.chipTxtActive]}>{opt}</Text>
+                            </TouchableOpacity>);
                         })}
                     </View>
 
-                    {/* AI Specs */}
-                    {Object.keys(aiSpecs).length > 0 && (
-                        <View style={{marginTop:20}}>
-                            <Text style={d.sectionTitle}>Detected Specs</Text>
-                            <View style={ai.specsCard}>
-                                {Object.entries(aiSpecs).map(([k,v])=>(
-                                    <View key={k} style={ai.specRow}>
-                                        <Text style={ai.specKey}>{k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase())}</Text>
-                                        <TextInput style={ai.specVal} value={v} onChangeText={nv=>setAiSpecs(p=>({...p,[k]:nv}))}/>
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                    )}
+                    {/* ── Features ── */}
+                    <Text style={air.sectionHeading}>Features</Text>
+                    <View style={air.chipPool}>
+                        {FEATURE_OPTIONS.map(opt=>{
+                            const active=aiFeatures.includes(opt);
+                            return (<TouchableOpacity key={opt} style={[air.chip,active&&air.chipActive]} onPress={()=>toggleChip(opt,aiFeatures,setAiFeatures)} activeOpacity={0.75}>
+                                {active&&<Text style={{color:'#6366F1',marginRight:4}}>✓ </Text>}
+                                <Text style={[air.chipTxt,active&&air.chipTxtActive]}>{opt}</Text>
+                            </TouchableOpacity>);
+                        })}
+                    </View>
 
-                    {/* Description */}
-                    <Text style={[d.sectionTitle,{marginTop:20}]}>Description</Text>
-                    <TextInput style={d.descBox} multiline numberOfLines={6} value={aiForm.description} onChangeText={v=>setAiField('description',v)} placeholder="Describe your item..." placeholderTextColor="#bbb" textAlignVertical="top"/>
+                    {/* ── Description ── */}
+                    <Text style={air.sectionHeading}>Description</Text>
+                    <TextInput style={air.descBox} multiline numberOfLines={6} value={aiForm.description} onChangeText={v=>setAiField('description',v)} placeholder="Describe your item..." placeholderTextColor="#bbb" textAlignVertical="top"/>
 
-                    {/* Location */}
-                    <Text style={[d.sectionTitle,{marginTop:20}]}>Location *</Text>
-                    <Text style={l.fieldLabel}>Region</Text>
+                    {/* ── Location ── */}
+                    <Text style={air.sectionHeading}>Location <Text style={{color:'#EF4444'}}>*</Text></Text>
+                    <Text style={air.fieldLabel}>Region</Text>
                     <TouchableOpacity style={l.selectBox} onPress={()=>setRegionPickerOpen(true)} activeOpacity={0.75}>
                         <Text style={[l.selectTxt,!aiForm.locationRegion&&l.selectPlaceholder]}>{selectedAiRegion?.label||"Select Region"}</Text>
                         <Text style={l.chevron}>›</Text>
                     </TouchableOpacity>
                     {aiForm.locationRegion && (
-                        <View>
-                            <Text style={[l.fieldLabel,{marginTop:10}]}>City / Town</Text>
+                        <View style={{marginTop:10}}>
+                            <Text style={air.fieldLabel}>City / Town</Text>
                             <TouchableOpacity style={l.selectBox} onPress={()=>setCityPickerOpen(true)} activeOpacity={0.75}>
                                 <Text style={[l.selectTxt,!aiForm.locationCity&&l.selectPlaceholder]}>{aiForm.locationCity||"Select City / Town"}</Text>
                                 <Text style={l.chevron}>›</Text>
@@ -1317,59 +1503,48 @@ export default function SellScreen() {
                         </View>
                     )}
 
-                    {/* Negotiable toggle */}
+                    {/* ── Negotiable toggle ── */}
                     <TouchableOpacity style={[l.toggleCard,{marginTop:16}]} onPress={()=>setAiField('is_negotiable',!aiForm.is_negotiable)} activeOpacity={0.85}>
                         <View style={l.toggleIconWrap}><Tag size={18} color="#6366F1"/></View>
                         <View style={l.toggleBody}><Text style={l.toggleTitle}>Price is Negotiable</Text><Text style={l.toggleSub}>Let buyers make offers</Text></View>
                         <View style={[s.toggle,aiForm.is_negotiable&&s.toggleOn]}><View style={[s.toggleThumb,aiForm.is_negotiable&&s.toggleThumbOn]}/></View>
                     </TouchableOpacity>
 
-                    {/* Submit */}
-                    <TouchableOpacity style={[ai.scanBtn,{marginTop:24}]} onPress={handleAiSubmit} disabled={aiSubmitting} activeOpacity={0.88}>
+                    {/* ── Post button ── */}
+                    <TouchableOpacity style={[ai.scanBtn,{marginTop:24,marginBottom:8}]} onPress={handleAiSubmit} disabled={aiSubmitting} activeOpacity={0.88}>
                         <LinearGradient colors={["#6366F1","#4338CA"]} style={ai.scanBtnGrad} start={{x:0,y:0}} end={{x:1,y:0}}>
-                            {aiSubmitting
-                                ? <ActivityIndicator color="#fff" size="small"/>
-                                : <><Sparkles size={20} color="#fff"/><Text style={ai.scanBtnTxt}>Post Listing 🚀</Text></>
-                            }
+                            {aiSubmitting ? <ActivityIndicator color="#fff" size="small"/>
+                                : <><Sparkles size={20} color="#fff"/><Text style={ai.scanBtnTxt}>Post Listing 🚀</Text></>}
                         </LinearGradient>
                     </TouchableOpacity>
-                </ScrollView>
+                </View>
 
-                {/* Region Picker for AI mode */}
+                {/* Region Picker */}
                 <Modal visible={regionPickerOpen} transparent animationType="slide" onRequestClose={()=>setRegionPickerOpen(false)}>
                     <TouchableOpacity style={l.modalOverlay} activeOpacity={1} onPress={()=>setRegionPickerOpen(false)}/>
-                    <View style={l.pickerSheet}>
-                        <View style={l.pickerHandle}/>
-                        <Text style={l.pickerTitle}>Select Region</Text>
+                    <View style={l.pickerSheet}><View style={l.pickerHandle}/><Text style={l.pickerTitle}>Select Region</Text>
                         <ScrollView style={{maxHeight:420}}>
-                            {GHANA_REGIONS.map(r=>{
-                                const isSel=aiForm.locationRegion===r.value;
-                                return (<TouchableOpacity key={r.value} style={[l.pickerOpt,isSel&&l.pickerOptActive]} onPress={()=>{setAiField('locationRegion',r.value);setAiField('locationCity','');setAiField('location',r.label);setRegionPickerOpen(false);}} activeOpacity={0.7}><Text style={[l.pickerOptTxt,isSel&&l.pickerOptTxtActive]}>{r.label}</Text>{isSel&&<Text style={{color:'#6366F1',fontSize:18}}>✓</Text>}</TouchableOpacity>);
-                            })}
+                            {GHANA_REGIONS.map(r=>{const isSel=aiForm.locationRegion===r.value;return(<TouchableOpacity key={r.value} style={[l.pickerOpt,isSel&&l.pickerOptActive]} onPress={()=>{setAiField('locationRegion',r.value);setAiField('locationCity','');setAiField('location',r.label);setRegionPickerOpen(false);}} activeOpacity={0.7}><Text style={[l.pickerOptTxt,isSel&&l.pickerOptTxtActive]}>{r.label}</Text>{isSel&&<Text style={{color:'#6366F1',fontSize:18}}>✓</Text>}</TouchableOpacity>);})}
                         </ScrollView>
                     </View>
                 </Modal>
+                {/* City Picker */}
                 <Modal visible={cityPickerOpen} transparent animationType="slide" onRequestClose={()=>setCityPickerOpen(false)}>
                     <TouchableOpacity style={l.modalOverlay} activeOpacity={1} onPress={()=>setCityPickerOpen(false)}/>
-                    <View style={l.pickerSheet}>
-                        <View style={l.pickerHandle}/>
-                        <Text style={l.pickerTitle}>Select City / Town</Text>
+                    <View style={l.pickerSheet}><View style={l.pickerHandle}/><Text style={l.pickerTitle}>Select City / Town</Text>
                         <ScrollView style={{maxHeight:440}}>
-                            {aiCityList.map((city:string)=>{
-                                const isSel=aiForm.locationCity===city;
-                                return (<TouchableOpacity key={city} style={[l.pickerOpt,isSel&&l.pickerOptActive]} onPress={()=>{setAiField('locationCity',city);setAiField('location',`${city}, ${selectedAiRegion?.label||''}`);setCityPickerOpen(false);}} activeOpacity={0.7}><Text style={[l.pickerOptTxt,isSel&&l.pickerOptTxtActive]}>{city}</Text>{isSel&&<Text style={{color:'#6366F1',fontSize:18}}>✓</Text>}</TouchableOpacity>);
-                            })}
+                            {aiCityList.map((city:string)=>{const isSel=aiForm.locationCity===city;return(<TouchableOpacity key={city} style={[l.pickerOpt,isSel&&l.pickerOptActive]} onPress={()=>{setAiField('locationCity',city);setAiField('location',`${city}, ${selectedAiRegion?.label||''}`);setCityPickerOpen(false);}} activeOpacity={0.7}><Text style={[l.pickerOptTxt,isSel&&l.pickerOptTxtActive]}>{city}</Text>{isSel&&<Text style={{color:'#6366F1',fontSize:18}}>✓</Text>}</TouchableOpacity>);})}
                         </ScrollView>
                     </View>
                 </Modal>
-            </KeyboardAvoidingView>
-        );
-    };
+            </ScrollView>
+        </KeyboardAvoidingView>
+    );
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MAIN RENDER
+    // MODE SELECTION SCREEN
     // ─────────────────────────────────────────────────────────────────────────
-    const stepContent = [renderTitle, renderPhotos, renderCategory, renderDetails, renderLocation, renderReview];
+        const stepContent = [renderTitle, renderPhotos, renderCategory, renderDetails, renderLocation, renderReview];
 
     // ── Mode: select screen ────────────────────────────────────────────────────
     if (mode === 'select') {
@@ -1742,16 +1917,29 @@ const ai = StyleSheet.create({
     scanBtnGrad:       { flexDirection:"row", alignItems:"center", justifyContent:"center", paddingVertical:16, gap:10 },
     scanBtnTxt:        { fontSize:16, fontWeight:"800", color:"#fff" },
     // Scanning
-    scanningRoot:      { flex:1, alignItems:"center", justifyContent:"center", padding:24, backgroundColor:"#F8F9FA" },
-    scanningCard:      { backgroundColor:"#fff", borderRadius:24, padding:32, alignItems:"center", width:"100%", elevation:4, shadowColor:"#6366F1", shadowOffset:{width:0,height:4}, shadowOpacity:0.15, shadowRadius:16 },
+    scanningRoot:      { flex:1, backgroundColor:"#0f0f1a" },
+    scanImgWrap:       { width:"100%", height:260, position:"relative", overflow:"hidden" },
+    scanImg:           { width:"100%", height:260 },
+    scanLineAnim:      { position:"absolute", left:0, right:0, height:2, backgroundColor:"rgba(99,102,241,0.9)", shadowColor:"#6366F1", shadowOffset:{width:0,height:0}, shadowOpacity:1, shadowRadius:6 },
+    corner:            { position:"absolute", width:20, height:20, borderColor:"#6366F1", borderWidth:2.5 },
+    cornerTL:          { top:12, left:12, borderRightWidth:0, borderBottomWidth:0 },
+    cornerTR:          { top:12, right:12, borderLeftWidth:0, borderBottomWidth:0 },
+    cornerBL:          { bottom:12, left:12, borderRightWidth:0, borderTopWidth:0 },
+    cornerBR:          { bottom:12, right:12, borderLeftWidth:0, borderTopWidth:0 },
+    scanCenter:        { position:"absolute", top:0, left:0, right:0, bottom:0, alignItems:"center", justifyContent:"center" },
+    spinRing:          { position:"absolute", width:80, height:80, borderRadius:40, borderWidth:3, borderColor:"#6366F1", borderTopColor:"transparent" },
+    scanIconInner:     { width:52, height:52, borderRadius:26, backgroundColor:"rgba(99,102,241,0.85)", alignItems:"center", justifyContent:"center" },
+    scanBadgeWrap:     { position:"absolute", bottom:10, left:0, right:0, flexDirection:"row", alignItems:"center", justifyContent:"center" },
+    scanBadgeTxt:      { color:"#fff", fontWeight:"700", fontSize:13 },
+    scanningCard:      { backgroundColor:"#1e1e2e", borderRadius:24, padding:24, margin:16, elevation:4, shadowColor:"#6366F1", shadowOffset:{width:0,height:4}, shadowOpacity:0.3, shadowRadius:16 },
     scanningIconWrap:  { position:"relative", marginBottom:20 },
     scanningPulse:     { position:"absolute", width:100, height:100, borderRadius:50, backgroundColor:"#EEF2FF", top:-14, left:-14 },
-    scanningTitle:     { fontSize:20, fontWeight:"900", color:"#1a1a2e", textAlign:"center", marginBottom:8 },
-    scanningSub:       { fontSize:14, color:"#6c757d", textAlign:"center", lineHeight:20 },
+    scanningTitle:     { fontSize:18, fontWeight:"900", color:"#fff", marginBottom:6 },
+    scanningSub:       { fontSize:13, color:"rgba(255,255,255,0.6)", lineHeight:20, marginBottom:4 },
     scanningSteps:     { marginTop:20, gap:10, width:"100%" },
     scanningStepRow:   { flexDirection:"row", alignItems:"center", gap:10 },
     scanningStepDot:   { width:8, height:8, borderRadius:4, backgroundColor:"#6366F1" },
-    scanningStepTxt:   { fontSize:13, color:"#495057", fontWeight:"500" },
+    scanningStepTxt:   { fontSize:13, color:"rgba(255,255,255,0.85)", fontWeight:"500", flex:1 },
     // Review
     resultBanner:      { flexDirection:"row", alignItems:"center", padding:12, borderRadius:12, borderWidth:1, marginBottom:16 },
     resultBannerLeft:  { flexDirection:"row", alignItems:"center", gap:8 },
@@ -1768,3 +1956,57 @@ const ai = StyleSheet.create({
     specVal:           { flex:1, fontSize:13, color:"#1a1a2e", paddingVertical:2, borderBottomWidth:1, borderBottomColor:"#e9ecef" },
 });
 
+// AI Review StyleSheet — matches web format
+const air = StyleSheet.create({
+    photosSection:    { backgroundColor:"#fff", padding:16, marginBottom:8 },
+    photosHeader:     { flexDirection:"row", alignItems:"center", marginBottom:12, gap:8 },
+    photosLabel:      { fontSize:15, fontWeight:"800", color:"#1a1a2e" },
+    photosBadge:      { backgroundColor:"#EEF2FF", borderRadius:20, paddingHorizontal:8, paddingVertical:2 },
+    photosBadgeTxt:   { fontSize:12, fontWeight:"700", color:"#6366F1" },
+    photosSlotsLeft:  { marginLeft:"auto", fontSize:12, color:"#6c757d" },
+    photosRow:        { flexDirection:"row", gap:8, alignItems:"center", flexWrap:"wrap" },
+    mainThumb:        { width:80, height:80, borderRadius:10, overflow:"hidden", position:"relative" },
+    mainThumbImg:     { width:"100%", height:"100%" },
+    mainThumbX:       { position:"absolute", top:4, right:4, width:18, height:18, borderRadius:9, backgroundColor:"rgba(0,0,0,0.6)", alignItems:"center", justifyContent:"center" },
+    mainThumbBadge:   { position:"absolute", bottom:0, left:0, right:0, backgroundColor:"rgba(99,102,241,0.9)", paddingVertical:2, alignItems:"center" },
+    mainThumbBadgeTxt:{ fontSize:10, fontWeight:"700", color:"#fff" },
+    extraThumb:       { width:70, height:70, borderRadius:10, overflow:"hidden", position:"relative" },
+    photoSlot:        { width:70, height:70, borderRadius:10, borderWidth:1.5, borderColor:"#6366F1", borderStyle:"dashed", alignItems:"center", justifyContent:"center", gap:4, backgroundColor:"#EEF2FF" },
+    photoSlotTxt:     { fontSize:11, color:"#6366F1", fontWeight:"600" },
+    photosHint:       { fontSize:12, color:"#6c757d", marginTop:10, lineHeight:17 },
+
+    categoryRow:      { flexDirection:"row", alignItems:"center", justifyContent:"space-between", paddingHorizontal:16, paddingVertical:14, backgroundColor:"#fff", marginBottom:8, borderBottomWidth:1, borderBottomColor:"#f0f0f0" },
+    categoryName:     { fontSize:15, fontWeight:"700", color:"#1a1a2e" },
+    changeCategory:   { fontSize:13, fontWeight:"600", color:"#6366F1" },
+
+    confBanner:       { flexDirection:"row", alignItems:"center", gap:6, padding:10, borderRadius:10, borderWidth:1, marginBottom:14, marginTop:4 },
+    confTxt:          { fontSize:13, fontWeight:"600" },
+    errBanner:        { backgroundColor:"#FEF3C7", borderRadius:10, padding:10, marginBottom:14, borderWidth:1, borderColor:"#FDE68A" },
+    errTxt:           { fontSize:13, color:"#92400E" },
+
+    fieldLabel:       { fontSize:13, fontWeight:"700", color:"#495057", marginBottom:6, marginTop:4 },
+    fieldInput:       { backgroundColor:"#fff", borderWidth:1, borderColor:"#e9ecef", borderRadius:10, paddingHorizontal:14, paddingVertical:12, fontSize:15, color:"#1a1a2e" },
+    fieldInputRow:    { flexDirection:"row", alignItems:"center" },
+    fieldBlock:       { marginBottom:14 },
+    charCount:        { fontSize:11, color:"#aaa", textAlign:"right", marginTop:3 },
+    toggleRow:        { flexDirection:"row", alignItems:"center", justifyContent:"space-between", paddingVertical:12, borderTopWidth:1, borderTopColor:"#f8f9fa", marginTop:4 },
+
+    priceRow:         { flexDirection:"row", alignItems:"center", borderWidth:1, borderColor:"#e9ecef", borderRadius:10, overflow:"hidden", marginBottom:16 },
+    pricePrefix:      { backgroundColor:"#f8f9fa", paddingHorizontal:14, paddingVertical:13, borderRightWidth:1, borderRightColor:"#e9ecef" },
+    prefixTxt:        { fontSize:15, fontWeight:"700", color:"#495057" },
+    priceInput:       { flex:1, paddingHorizontal:14, fontSize:16, color:"#1a1a2e", fontWeight:"600" },
+    priceSuggest:     { flexDirection:"row", alignItems:"center", gap:5, marginBottom:8 },
+    priceSuggestTxt:  { fontSize:12, color:"#F59E0B", fontWeight:"600" },
+
+    sectionHeading:   { fontSize:18, fontWeight:"900", color:"#1a1a2e", marginTop:20, marginBottom:12 },
+    detailsCard:      { backgroundColor:"#fff", borderRadius:14, borderWidth:1, borderColor:"#e9ecef", padding:16, marginBottom:4 },
+
+    chipRow:          { flexDirection:"row", flexWrap:"wrap", gap:8 },
+    chipPool:         { flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:8 },
+    chip:             { flexDirection:"row", alignItems:"center", borderWidth:1.5, borderColor:"#dee2e6", borderRadius:20, paddingHorizontal:12, paddingVertical:7, backgroundColor:"#fff" },
+    chipActive:       { borderColor:"#6366F1", backgroundColor:"#EEF2FF" },
+    chipTxt:          { fontSize:13, color:"#495057", fontWeight:"500" },
+    chipTxtActive:    { color:"#6366F1", fontWeight:"700" },
+
+    descBox:          { backgroundColor:"#fff", borderWidth:1, borderColor:"#e9ecef", borderRadius:12, padding:14, fontSize:14, color:"#1a1a2e", minHeight:140, textAlignVertical:"top", lineHeight:22 },
+});
