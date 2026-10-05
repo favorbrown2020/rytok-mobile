@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────
 import * as SecureStore from 'expo-secure-store';
 
-// Current active IP of laptop on tethered hotspot
+// Phone hotspot IP (laptop connected to phone hotspot)
 const DEV_IP = '10.231.174.64';
 
 export const API_BASE_URL = __DEV__
@@ -75,13 +75,31 @@ export async function clearAuth(): Promise<void> {
 
 export async function apiFetch(path: string, options?: RequestInit) {
     const token = await getAuthToken();
+
+    // Detect FormData / multipart body — must NOT set Content-Type so the
+    // browser/RN can auto-generate the multipart boundary.
+    const isFormData =
+        options?.body instanceof FormData ||
+        (typeof options?.body === 'object' && options?.body !== null &&
+         Object.prototype.toString.call(options?.body) === '[object FormData]');
+
+    const callerHeaders = (options?.headers as Record<string, string>) || {};
+    const hasContentType = 'Content-Type' in callerHeaders || 'content-type' in callerHeaders;
+
     const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(options?.headers as Record<string, string> || {}),
+        // Only add JSON content-type when NOT a FormData upload and caller didn't specify
+        ...(!isFormData && !hasContentType ? { 'Content-Type': 'application/json' } : {}),
+        ...callerHeaders,
     };
 
     if (token && !headers['Authorization']) {
         headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // Remove Content-Type entirely for FormData (let fetch set it with boundary)
+    if (isFormData) {
+        delete headers['Content-Type'];
+        delete headers['content-type'];
     }
 
     const url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
