@@ -30,10 +30,23 @@ const C = {
     error:         "#EF4444",
 };
 
-const GHANA_REGIONS = [
-    "Greater Accra","Ashanti","Western","Eastern","Central","Volta","Northern",
-    "Upper East","Upper West","Brong-Ahafo","Oti","Ahafo","Bono East",
-    "North East","Savannah","Western North",
+const GHANA_REGIONS: {value:string;label:string;districts:string[]}[] = [
+    {value:"greater-accra",label:"Greater Accra",districts:["Abeka", "Abelenkpe", "Abese", "Abia", "Abladzi", "Ablekuma", "Ablekuma Fan Milk", "Ablekuma Manhean", "Ablorh Adjei", "Abokobi", "Abossey Okai", "Accra", "Accra Central", "Accra New Town", "Achimota", "Achimota Mile 7", "Achimota Village", "Acoconut", "Action Chapel Area", "Ada Foah", "Adabraka", "Adabraka Sahara", "Addo", "Adedenko", "Adenta", "Adenta Barrier", "Adenta Fafraha", "Adenta Frafraha", "Adenta Housing", "Adenta Market", "Adenta Sakora", "Adjei Kojo", "Adjiriganor", "Adjringanor New Site", "Afariwa", "Afienya", "Agape", "Agbado", "Agbogba", "Agbogbloshie", "Agege", "Ahinsan Estate", "Ahodwo", "Airport Area", "Airport City", "Airport Hills", "Airport Residential", "Airport Residential Area", "Aiyinase", "Ajiringanor", "Akotobabi", "Akra", "Akrofuom", "Akuse", "Akweteman Zongo", "Akweteyman", "Alajo", "Alajo Kokomlemle", "Alogboshie", "Amakom", "Amanfrom", "Amanor Dodoo", "Amansaman", "Amasaman", "Amasaman Fise", "Amasie", "Amomorley", "Amrahia", "Anibi\u025b", "Anloga", "Anobi", "Anyaa", "Anyakpoi", "Anyano", "Apenkwa", "Aplaku", "Appolonia", "Arena", "Ars", "Ashaiman", "Ashaiman Lebanon", "Ashaiman Lebanon Zone 1-6", "Ashaiman Mandela", "Ashaiman Market", "Ashaiman Middle East", "Ashaiman New Town", "Ashaiman Old Town", "Ashaiman Tulaku", "Ashaiman Zenu", "Ashale Botwe", "Ashalley Botwe", "Ashiaman Broadway", "Ashiyie", "Ashongman", "Ashongman Estate", "Ashongman Estates", "Ashongman Gonse", "Ashongman Joma", "Ashongman Village", "Asylum Down", "Atomic", "Atomic Down", "Atomic Energy", "Atomic Junction", "Avenor", "Awoshie", "Awudome", "Ayawaso", "Ayi Mensah", "Ayimensah", "Baatsona", "Baatsona New Town", "Baatsonaa", "Bawaleshi", "Bawaleshie", "Baweleshie", "Big Ada", "Bortianor", "Botianor", "Boundary Road", "Brazil", "Buade", "Bubiashie", "Bubuashie", "Buduburam", "Bukom", "Burma Camp", "CP", "Cantonment", "Cantonments", "Cape Coast Junction", "Castle Road", "Central Accra", "Central Legon", "Chantan", "Chapel Hill", "China Mall Area", "Chorkor", "Christian Village", "Circle", "Circle Odorkor", "City Annex", "Clottey", "Coast Guard", "Cocoa Board", "Coconut Grove", "Community 1", "Community 10", "Community 11", "Community 12", "Community 13", "Community 14", "Community 15", "Community 16", "Community 17", "Community 18", "Community 19", "Community 2", "Community 20", "Community 21", "Community 22", "Community 23", "Community 24", "Community 25", "Community 3", "Community 4", "Community 5", "Community 6", "Community 7", "Community 8", "Community 9", "Cow Lane", "Dadeban", "Dadekotopon", "Danfa", "Dansoman", "Dansoman Exhibition", "Dansoman Flamingo", "Dansoman Keep Fit", "Dansoman Last Stop", "Dansoman Roundabout", "Dansoman Sahara", "Darkuman", "Darkuman Junction", "Darkuman Kokompe", "Darkuman Roman Down", "Dawhenya", "Dodowa", "Doku", "Dome", "Dome Crossing", "Dome GCB", "Dome Kwabenya", "Dome Market", "Dome Pillar 2", "Dopeyyia", "Dzorwulu", "East Adenta", "East Airport", "East Cantonments", "East Dzorwulu", "East Lands", "East Legon", "East Legon Extension", "East Legon Hills", "East Ridge", "Eastland", "Eastlegonhills", "Fadama", "Fanmilk", "Feo Eyeo", "Fise", "Flamingo", "Frafraha", "GCB Estates", "Ga Mashie", "Ga West", "Gamashie", "Gbawe", "Gbawe CP", "Gbawe Gonse", "Gbawe Official Town", "Gbawe Santa Maria", "Gbawe Zero", "Gbegbeyise", "Gbesile", "Gbetsile", "Giffard Road", "Glefe", "Golf City", "Greater Accra", "Greda Estates", "Haatso", "Haatso Atomic Down", "Haatso Bohye", "Haatso Ecomog", "Haatso Papaye", "Haatso Zongo", "Harbour Area", "High Street", "Holy Garden", "India", "Industrial Area", "James Town", "Joma", "Junction Mall Area", "Kabuklaga", "Kakasunanka", "Kanda", "Kanda Estates", "Kaneshie", "Kaneshie Agape", "Kaneshie First Light", "Kaneshie Official", "Kasoa", "Katamanso", "Kawukudi", "Kinkole", "Kisseman", "Kissieman", "Klagon", "Koans Estate", "Koblenzo", "Kokomlemle", "Kokrobite", "Kole Bu", "Korle Bu", "Korle Dudor", "Korle Gonno", "Korle-Wokon", "Korley Klottey", "Kotobabi", "Kotobabi Westhills Mall", "Kotoka International Airport Area", "Kpehe", "Kpeshie", "Kpobiman", "Kpone", "Kpone Barrier", "Kpone-Katamanso", "Kwabenya", "Kwabenya ACP", "Kwabenya Police Station", "Kwabenya Zongo", "Kwashieman", "Kwashieman Roundabout", "Kwashieman Zongo", "La", "La Beach", "La Bone", "La Dadekotopon", "La Nkwantanang", "La Paz", "La Wireless", "Labadi", "Labone", "Lakeside Estate", "Langbiawe", "Lapaz", "Lartebiokorshie", "Lashibi", "Lebanon", "Legon", "Legon Campus", "Legon Hills", "Legon UG", "Lekma", "Lekpongunor", "Lesdons", "Liberation Road", "Lomnava", "Maame Krobo", "Maamobi", "Madina", "Madina ARS", "Madina Atomic Junction", "Madina Estate", "Madina Firestone", "Madina Market", "Madina Ritz", "Madina Social Welfare", "Madina Zongo", "Makola", "Mallam", "Mallam Gbawe", "Mallam Junction", "Mamprobi", "Mamprobi Estate", "Mamprobi Sempe", "Manet", "Mannet", "Manyesim", "Maranatha", "Martey Tsuru", "Mataheko", "Mateheko", "McCarthy Hill", "Medie", "Mempeasem", "Michel Camp", "Mile 7", "Ministries", "Miotso", "Motorway Extension", "Mpoase", "Mustapha", "Neoplan", "New Aplaku", "New Gbawe", "New Legon", "New Town", "Ngleshie Amanfro", "Nii Boi Town", "Nima", "Nima 441", "Nima Highway", "Ningo", "Nmai Dzorn", "Nmaikrom", "North Dzorwulu", "North Industrial Area", "North Kaneshie", "North Labone", "North Legon", "North Ridge", "Nsakina", "Nsawam Road", "Nthc Estates", "Nungua", "Nungua Barrier", "Nungua Coco Beach", "Nungua New Town", "Nungua Old Town", "Nyaniba", "Nyaniba Estates", "Nyanyano", "Obaleh", "Oblogo", "Obra Spot", "Obuasi Camp", "Odorkor", "Odorkor Akwete", "Odorkor Busia", "Odorkor Official Town", "Odorkor Pentecost", "Odorkor Santa Maria", "Odorkor aBlade", "Odorna", "Ofankor", "Ofankor Barrier", "Official Town", "Ogbojo", "Okaikoi North", "Okaikoi South", "Okpoi Gonno", "Okponglo", "Old Ashongman", "Old Barrier", "Old Dansoman", "Old Nungua", "Old Teshie", "Opera Square", "Osu", "Osu Badu", "Osu Cemetery Road", "Osu Kuku Hill", "Osu Oxford Street", "Osu RE", "Otinibi", "Oyarifa", "Oyibi", "Paloma", "Pamprom", "Pantang", "Papao", "Papaye", "Parliament House Area", "Pig Farm", "Pokuase", "Pokuase ACP", "Pokuase Amasaman", "Pokuase Mayera", "Police Academy", "Prampram", "Presec Legon Area", "Quarshie", "Race Course", "Regimanuel", "Regimanuel Gray", "Ridge", "Ridge Roundabout", "Ring Road Central", "Ring Road East", "Ring Road Estates", "Ring Road West", "Ritz", "Roman Ridge", "Russels", "Sabon Zongo", "Sahara", "Sakaman", "Sakora", "Sakumono", "Sakumono Beach", "Sakumono Estates", "Sakumono Village", "Santa Maria", "Santeo", "Sarpeiman", "Sege", "Sempe", "Shai Hills", "Shianor", "Shiashi", "Shiashie", "Sogakope", "South La", "Sowutuom", "Sowutuom CP", "Sowutuom Ofankor", "Sowutuom Official Town", "Spintex", "Spintex Road Area", "State Housing", "Sun City", "Tabora", "Taifa", "Taifa Burkina", "Taki", "Tantra Hills", "Teiman", "Tema", "Tema Comm 1-25", "Tema Fishing Harbour", "Tema Harbour", "Tema Industrial Area", "Tema Main", "Tema Manhean", "Tema New Town", "Tema Newtown", "Tema Station", "Tesano", "Teshie", "Teshie Lekma", "Teshie Nungua Estates", "Teshie Okpoigonno", "Teshie Rasta", "Teshie Tsui Bleoo", "Tetegu", "Texpo", "Timber Market", "Trade Fair", "Traffic Light", "Trassaco", "Tsui Bleoo", "Tsuibleoo", "Tuba", "Tudu", "Tulaku", "University of Ghana", "Ussher Fort Area", "Ussher Town", "VRA", "Villagio", "Waju", "Weija", "Weija Barrier", "West Hills", "West Hills Mall Area", "West Legon", "West Ridge", "Western Salem", "Whitehouse", "Winneba Road", "Yooway", "Yooway Estates", "Zenu", "Zero (Gbawe)", "Zongo Junction", "Zongo Laka", "Zoo", "Zoological Gardens Area"]},
+    {value:"ashanti",label:"Ashanti",districts:["Aboabo", "Abofour", "Abuakwa", "Adankwame", "Adum", "Agogo", "Agona Ashanti", "Agroyesum", "Ahenkro", "Ahodwo", "Akwatia Line", "Antoa", "Anwiankwanta", "Asafo", "Asawasi", "Ash Town", "Asokore", "Asokore Mampong", "Asokwa", "Asuyeboa", "Ayeduase", "Ayigya", "Bantama", "Barekese", "Bekwai", "Besease", "Bomso", "Brahabebome", "Breman", "Buokrom", "Daaban", "Dichemso", "Dominase", "Eduabin", "Edwenase", "Effiduase", "Ejisu", "Essumeja", "Fante New Town", "Foase", "Fumesua", "Jacobu", "Jamasi", "Juansa", "KNUST", "Kenyaasi", "Kofiase", "Kokofu", "Komfo Anokye", "Konongo", "Kotei", "Krapa", "Krofrom", "Kronum", "Kunka", "Kwadaso", "Kwamo", "Kwanwoma", "Mampong", "Mamponteng", "Mankranso", "Manso Adubia", "Manso Nkwanta", "Namong", "Nhyiaeso", "Nkawie", "Nzema", "Obuasi", "Obuasi Estate", "Odumase", "Offinso", "Onwe", "Patasi", "Santasi", "Sawaba", "Sepe Tinpom", "Sokoban", "Suame", "Tafo", "Tarkwa Maakro", "Tepa", "Toase", "Trede", "Tutuuka", "Wawasi"]},
+    {value:"western",label:"Western",districts:["Aboso", "Abuesi", "Agona Nkwanta", "Agyaikrom", "Akwaabadu", "Anaji", "Apowa", "Asankragua", "Asiama", "Atieku", "Axim", "Ayinase", "Bamiankor", "Bawdie", "Bogoso", "Bonyere", "Busua", "Daboase", "Dixcove", "Dompim", "Effiakuma", "Eikwe", "Elubo", "Essipon", "Eweku", "Half Assini", "Huni Valley", "Inchaban", "Kansaworodo", "Kikam", "Kojokrom", "Kwesimintsim", "Manso", "Manso Amenfi", "Market Circle", "Mpohor", "New Takoradi", "Nkroful", "Nsuaem", "Prestea", "Samaboi", "Sekondi", "Shama", "Takoradi", "Tarkwa", "Tikobo No. 1", "Tikobo No. 2", "Wassa Akropong", "Yabiw"]},
+    {value:"central",label:"Central",districts:["Abrem Agona", "Abura", "Abura Dunkwa", "Agona Swedru", "Ajumako", "Anomabo", "Anyinabrim", "Apam", "Asebu", "Assin Bereku", "Assin Foso", "Assin Manso", "Assin Praso", "Awutu Bereku", "Ayanfuri", "Bawjiase", "Bisease", "Bobikuma", "Brakwa", "Breman Asikuma", "Buduburam", "Cape Coast", "Dago", "Dawurampong", "Diaso", "Dominase", "Duakwa", "Dunkwa-on-Offin", "Ekon", "Elmina", "Enyan Abaasa", "Essarkyir", "Gomoa Afransi", "Hemang", "Iron City", "Jukwa", "Kakumdo", "Kasoa", "Kissi", "Komenda", "Kwanyako", "Kyekyewere", "Mankessim", "Moree", "Mumford", "Nsaba", "Nsuaem Kyekyewere", "Nyakrom", "Nyankumasi Ahenkro", "Odoben", "Okyereko", "Opeikuma", "Otuam", "Pedu", "Pomadze", "Potsin", "Saltpond", "Senya Beraku", "Twifo Praso", "University Area", "Winneba", "Yamoransa"]},
+    {value:"eastern",label:"Eastern",districts:["Abetifi", "Abiriw", "Abompe", "Abonsi", "Abosamanso", "Abreshia", "Aburi", "Achiase", "Adeiso", "Adoagyiri", "Adweso", "Afosu", "Agormanya", "Agya Tawia", "Ahwerease", "Akanteng", "Akim Oda", "Akim Swedru", "Akorabo", "Akorley", "Akosombo", "Akropong", "Akroso", "Akuse", "Akwatia", "Akyem Tafo", "Amanase", "Amaniampong", "Amanokrom", "Anum", "Apapam", "Aperade", "Apirede", "Asamankese", "Asawase", "Asene", "Aseseeso", "Asesewa", "Asikam", "Asokore", "Asuom", "Atensoo", "Atimpoku", "Awaham", "Awuah Domasi", "Awukugua", "Ayinase", "Ayirebi", "Begoro", "Berekuso", "Boadua", "Boso", "Coaltar", "Dademantse", "Dawu", "Djankrom", "Dokrochiwa", "Effiduase", "Fodoa", "Gyankama", "Gyiakiti", "Hemang", "Huenya", "Juaben", "Jumapo", "Kade", "Koforidua", "Kotoso", "Kpong", "Kraboa", "Kukurantumi", "Kusi", "Kwahu Tafo", "Kyebi", "Larteh", "Mamfe", "Mampong Akuapem", "Mepom", "Mpraeso", "New Abirem", "New Tafo", "Nkawkaw", "Nkurakan", "Nkwatia", "Noyem", "Nsakye", "Nsawam", "Nsutam", "Ntankro", "Obo", "Obodan", "Obomeng", "Odumase Krobo", "Ofoase", "Okorase", "Osiem", "Osino", "Oterkpolu", "Otumi", "Oworam", "Oyoko", "Sekengsi", "Senchi", "Somanya", "Suhum", "Sutri", "Takrowase", "Topremang", "Tutu", "Wirenkyiren", "Zongo"]},
+    {value:"northern",label:"Northern",districts:["Aboabo", "Bimbila", "Changli", "Choggu", "Gbanyamase", "Gumani", "Gurugu", "Gushegu", "Jisonayili", "Kakpayili", "Kalpohin", "Kanvilli", "Karaga", "Kpandai", "Kumbungu", "Lamashegu", "Nanton", "Nyankpala", "Nyanshegu", "Pong-Tamale", "Saboba", "Sabonjida", "Sagnarigu", "Sang", "Savelugu", "Tamale Central", "Tatale", "Tolon", "Vittin", "Wulensi", "Yendi", "Zabzugu"]},
+    {value:"upper-east",label:"Upper East",districts:["Bawku", "Binduri", "Bolgatanga", "Bongo", "Chiana", "Fumbisi", "Garu", "Nangodi", "Navrongo", "Paga", "Pusiga", "Sandema", "Sumbrungu", "Tempane", "Tongo", "Zebilla", "Zuarungu"]},
+    {value:"upper-west",label:"Upper West",districts:["Bamahu", "Bulenga", "Funsi", "Gwollu", "Issa", "Jirapa", "Kaleo", "Kpongu", "Lambussie", "Lawra", "Nadowli", "Nandom", "Sing", "Tumu", "Wa", "Wechiau"]},
+    {value:"volta",label:"Volta",districts:["Abutia", "Adaklu Waya", "Adidome", "Aflao", "Agbozume", "Ahoe", "Akatsi", "Alakple", "Anfoega", "Anloga", "Ave Dakpa", "Bankoe", "Battor", "Denu", "Dome", "Dzelukope", "Dzodze", "Dzolokpuita", "Gbi-Wegbe", "Heve", "Ho", "Hohoe", "Juapong", "Keta", "Kpando", "Kpetoe", "Kpeve", "Mepe", "Peki", "Penyi", "Sogakope", "Tsito", "Vakpo", "Ve Golokwati", "Woe"]},
+    {value:"brong-ahafo",label:"Bono",districts:["Abesim", "Badu", "Banda Ahenkro", "Berekum", "Chiraa", "Dormaa Ahenkro", "Drobo", "Fiapre", "Japekrom", "Jinijini", "Kato", "Nkrankwanta", "Nsawkaw", "Nsoatre", "Odomase", "Sampa", "Sunyani", "Wamfie", "Wenchi"]},
+    {value:"bono-east",label:"Bono East",districts:["Amantin", "Atebubu", "Aworowa", "Busunya", "Jema", "Kajaji", "Kenten", "Kintampo", "Kwame Danso", "Nkoranza", "Prang", "Techiman", "Tuobodom", "Yeji"]},
+    {value:"ahafo",label:"Ahafo",districts:["Bechem", "Bomaa", "Duayaw Nkwanta", "Goaso", "Hwidiem", "Kenyasi", "Kukuom", "Mim"]},
+    {value:"western-north",label:"Western North",districts:["Akontombra", "Anhwiaso", "Asafo", "Bekwai", "Bibiani", "Boako", "Bodi", "Dadieso", "Enchi", "Essam", "Juaboso", "Oseikojokrom", "Sefwi Camp", "Wiawso"]},
+    {value:"oti",label:"Oti",districts:["Asato", "Chinderi", "Dambai", "Jasikan", "Kadjebi", "Kete Krachi", "Kpassa", "Likpe", "Nkonya", "Nkwanta", "Santrokofi"]},
+    {value:"north-east",label:"North East",districts:["Bunkpurugu", "Chereponi", "Gambaga", "Nakpanduri", "Nalerigu", "Walewale", "Yagaba", "Yunyoo"]},
+    {value:"savannah",label:"Savannah",districts:["Bole", "Buipe", "Daboya", "Damongo", "Kpalbe", "Salaga", "Sawla", "Tuna"]},
 ];
 
 const YEARS = Array.from({length:40},(_,i)=>String(new Date().getFullYear()-i));
@@ -288,7 +301,8 @@ export default function SellScreen() {
     const [step, setStep]     = useState(0);
     const [form, setFormRaw]  = useState({
         title:"", description:"", category:"", subcategory:"",
-        condition:"", price:"", is_negotiable:false, location:"", phone:"",
+        condition:"", price:"", is_negotiable:false,
+        locationRegion:"", locationCity:"", location:"", phone:"",
     });
     const [dynVals, setDynVals]       = useState<Record<string,any>>({}); // extra cat fields
     const [images, setImages]         = useState<{id:string;uri:string}[]>([]);
@@ -301,6 +315,7 @@ export default function SellScreen() {
     const [drillSel, setDrillSel]         = useState({ brand:false, model:false });
     const [activeSelect, setActiveSelect] = useState<{key:string;label:string;opts:string[]}|null>(null);
     const [regionPickerOpen, setRegionPickerOpen] = useState(false);
+    const [cityPickerOpen, setCityPickerOpen]       = useState(false);
     const [showDraftModal, setShowDraftModal]     = useState(false);
     const [showPhotoModal, setShowPhotoModal]     = useState(false);
     const [openToTrade, setOpenToTrade]           = useState(false);
@@ -363,7 +378,7 @@ export default function SellScreen() {
             const noCondCat   = ["jobs","services","property"].includes(form.category);
             return hasCondition || noCondCat;
         }
-        if (step === 4) return !!form.location.trim();
+        if (step === 4) return !!(form.locationRegion && form.locationCity);
         return true;
     };
 
@@ -436,7 +451,7 @@ export default function SellScreen() {
             await AsyncStorage.removeItem(DRAFT_KEY).catch(() => {});
             Alert.alert("🎉 Listed!", "Your listing is now live.", [
                 { text: "View", onPress: () => router.push("/(tabs)") },
-                { text: "New Listing", onPress: () => { setFormRaw({title:"",description:"",category:"",subcategory:"",condition:"",price:"",is_negotiable:false,location:"",phone:""}); setDynVals({}); setImages([]); setStep(0); } },
+                { text: "New Listing", onPress: () => { setFormRaw({title:"",description:"",category:"",subcategory:"",condition:"",price:"",is_negotiable:false,locationRegion:"",locationCity:"",location:"",phone:""}); setDynVals({}); setImages([]); setStep(0); } },
             ]);
         } catch(e) {
             Alert.alert("Error","Could not submit listing. Please try again.");
@@ -790,20 +805,39 @@ export default function SellScreen() {
     };
 
     // ── Step 4: Location & Options ─────────────────────────────────────────────
+    const selectedRegionData = GHANA_REGIONS.find(r => r.value === form.locationRegion);
+    const cityList = selectedRegionData?.districts || [];
+
     const renderLocation = () => (
         <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS==="ios"?"padding":undefined} keyboardVerticalOffset={100}>
             <ScrollView style={s.stepBody} contentContainerStyle={{paddingBottom:140,padding:16}} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                 <Text style={s.stepTitle}>Location</Text>
+                {/* ── Region ── */}
+                <Text style={l.fieldLabel}>Region *</Text>
                 <TouchableOpacity style={l.selectBox} onPress={()=>setRegionPickerOpen(true)} activeOpacity={0.75}>
-                    <Text style={[l.selectTxt,!form.location&&l.selectPlaceholder]}>{form.location||"Select Region"}</Text>
+                    <Text style={[l.selectTxt,!form.locationRegion&&l.selectPlaceholder]}>{selectedRegionData?.label||"Select Region"}</Text>
                     <Text style={l.chevron}>›</Text>
                 </TouchableOpacity>
-                {form.location?(
-                    <View style={l.locationHint}><MapPin size={13} color={C.primary}/><Text style={l.locationHintTxt}>{form.location}, Ghana</Text></View>
-                ):(
-                    <TouchableOpacity style={l.locationHint} onPress={()=>setField("location","Greater Accra")} activeOpacity={0.7}>
-                        <MapPin size={13} color={C.primary}/><Text style={l.locationHintTxt}>Accra, Ghana</Text>
-                    </TouchableOpacity>
+
+                {/* ── City / Town (shown after region selected) ── */}
+                {form.locationRegion && (
+                    <View>
+                        <Text style={[l.fieldLabel,{marginTop:14}]}>City / Town *</Text>
+                        <TouchableOpacity style={l.selectBox} onPress={()=>setCityPickerOpen(true)} activeOpacity={0.75}>
+                            <Text style={[l.selectTxt,!form.locationCity&&l.selectPlaceholder]}>{form.locationCity||"Select City / Town"}</Text>
+                            <Text style={l.chevron}>›</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Location hint pill */}
+                {(form.locationRegion||form.locationCity) && (
+                    <View style={l.locationHint}>
+                        <MapPin size={13} color={C.primary}/>
+                        <Text style={l.locationHintTxt}>
+                            {[form.locationCity,selectedRegionData?.label].filter(Boolean).join(", ")}, Ghana
+                        </Text>
+                    </View>
                 )}
                 <View style={{height:24}}/>
                 <TouchableOpacity style={l.toggleCard} onPress={()=>setField("is_negotiable",!form.is_negotiable)} activeOpacity={0.85}>
@@ -822,6 +856,7 @@ export default function SellScreen() {
                     <View style={[s.toggle,scheduleEnabled&&s.toggleOn]}><View style={[s.toggleThumb,scheduleEnabled&&s.toggleThumbOn]}/></View>
                 </TouchableOpacity>
             </ScrollView>
+            {/* Region Picker */}
             <Modal visible={regionPickerOpen} transparent animationType="slide" onRequestClose={()=>setRegionPickerOpen(false)}>
                 <TouchableOpacity style={l.modalOverlay} activeOpacity={1} onPress={()=>setRegionPickerOpen(false)}/>
                 <View style={l.pickerSheet}>
@@ -829,8 +864,46 @@ export default function SellScreen() {
                     <Text style={l.pickerTitle}>Select Region</Text>
                     <ScrollView style={{maxHeight:420}}>
                         {GHANA_REGIONS.map(r=>{
-                            const isSel=form.location===r;
-                            return (<TouchableOpacity key={r} style={[l.pickerOpt,isSel&&l.pickerOptActive]} onPress={()=>{setField("location",r);setRegionPickerOpen(false);}} activeOpacity={0.7}><Text style={[l.pickerOptTxt,isSel&&l.pickerOptTxtActive]}>{r}</Text>{isSel&&<Text style={{color:C.primary,fontSize:18}}>✓</Text>}</TouchableOpacity>);
+                            const isSel=form.locationRegion===r.value;
+                            return (
+                                <TouchableOpacity key={r.value} style={[l.pickerOpt,isSel&&l.pickerOptActive]}
+                                    onPress={()=>{
+                                        setField("locationRegion",r.value);
+                                        setField("locationCity","");
+                                        setField("location",r.label);
+                                        setRegionPickerOpen(false);
+                                    }} activeOpacity={0.7}
+                                >
+                                    <Text style={[l.pickerOptTxt,isSel&&l.pickerOptTxtActive]}>{r.label}</Text>
+                                    {isSel&&<Text style={{color:C.primary,fontSize:18}}>✓</Text>}
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+            </Modal>
+
+            {/* City Picker */}
+            <Modal visible={cityPickerOpen} transparent animationType="slide" onRequestClose={()=>setCityPickerOpen(false)}>
+                <TouchableOpacity style={l.modalOverlay} activeOpacity={1} onPress={()=>setCityPickerOpen(false)}/>
+                <View style={l.pickerSheet}>
+                    <View style={l.pickerHandle}/>
+                    <Text style={l.pickerTitle}>Select City / Town</Text>
+                    <ScrollView style={{maxHeight:440}}>
+                        {cityList.map((city:string)=>{
+                            const isSel=form.locationCity===city;
+                            return (
+                                <TouchableOpacity key={city} style={[l.pickerOpt,isSel&&l.pickerOptActive]}
+                                    onPress={()=>{
+                                        setField("locationCity",city);
+                                        setField("location",`${city}, ${selectedRegionData?.label||""}`);
+                                        setCityPickerOpen(false);
+                                    }} activeOpacity={0.7}
+                                >
+                                    <Text style={[l.pickerOptTxt,isSel&&l.pickerOptTxtActive]}>{city}</Text>
+                                    {isSel&&<Text style={{color:C.primary,fontSize:18}}>✓</Text>}
+                                </TouchableOpacity>
+                            );
                         })}
                     </ScrollView>
                 </View>
@@ -920,18 +993,13 @@ export default function SellScreen() {
                 <View style={s.footer}>
                     {error?<Text style={s.errTxt}>{error}</Text>:null}
                     <View style={s.footerRow}>
-                        {step > 0 && (
-                            <TouchableOpacity style={s.backBtn} onPress={goBack} activeOpacity={0.8}>
-                                <ChevronLeft size={16} color={C.textSecondary}/>
-                                <Text style={s.backBtnTxt}>Back</Text>
-                            </TouchableOpacity>
-                        )}
+    
                         {step < STEPS - 1 ? (
                             <TouchableOpacity
                                 style={[s.nextBtn,!canNext()&&s.nextBtnDim]}
                                 onPress={()=>{
                                     if (!canNext()) {
-                                        const msgs:Record<number,string>={0:"Please enter a title (at least 5 characters).",1:"Please add at least 1 photo.",2:"Please select a category.",3:"Please select a condition for your item.",4:"Please select your location / region."};
+                                        const msgs:Record<number,string>={0:"Please enter a title (at least 5 characters).",1:"Please add at least 1 photo.",2:"Please select a category.",3:"Please select a condition for your item.",4:"Please select your region and city / town."};
                                         setError(msgs[step]||"Please complete this step."); return;
                                     }
                                     goNext();
@@ -1037,7 +1105,7 @@ const s = StyleSheet.create({
     reviewRow:      { flexDirection:"row", justifyContent:"space-between", paddingVertical:12, borderBottomWidth:1, borderBottomColor:C.border },
     reviewLabel:    { fontSize:13, color:C.textMuted, fontWeight:"600" },
     reviewVal:      { fontSize:14, color:C.textPrimary, fontWeight:"600", flex:1, textAlign:"right" },
-    footer:         { paddingHorizontal:16, paddingTop:12, paddingBottom:36, backgroundColor:C.surface, borderTopWidth:1, borderTopColor:C.border },
+    footer:         { paddingHorizontal:16, paddingTop:12, paddingBottom:48, backgroundColor:C.surface, borderTopWidth:1, borderTopColor:C.border },
     footerRow:      { flexDirection:"row", alignItems:"center", gap:10 },
     backBtn:        { flexDirection:"row", alignItems:"center", paddingHorizontal:18, paddingVertical:14, borderRadius:14, backgroundColor:C.bg, borderWidth:1, borderColor:C.border, gap:4 },
     backBtnTxt:     { fontSize:14, fontWeight:"700", color:C.textSecondary },
@@ -1094,6 +1162,7 @@ const d = StyleSheet.create({
 
 // Location StyleSheet
 const l = StyleSheet.create({
+    fieldLabel:       { fontSize:13, fontWeight:"700", color:C.textSecondary, marginBottom:6 },
     selectBox:        { flexDirection:"row", alignItems:"center", justifyContent:"space-between", backgroundColor:"#fff", borderWidth:1, borderColor:"#e9ecef", borderRadius:12, paddingHorizontal:16, paddingVertical:14, marginBottom:8 },
     selectTxt:        { fontSize:15, color:"#1a1a2e", fontWeight:"500" },
     selectPlaceholder:{ color:"#adb5bd" },
