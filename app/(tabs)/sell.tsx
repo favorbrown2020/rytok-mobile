@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem  from "expo-file-system";
+import * as FileSystem  from "expo-file-system/legacy";
 import {
     PlusCircle, Tag, MapPin, Camera, Upload, X, ChevronRight,
     ChevronLeft, ArrowLeftRight, Clock, CheckCircle2, Image as ImageIcon,
