@@ -419,7 +419,7 @@ export default function SellScreen() {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== "granted") { Alert.alert("Permission needed","Allow camera access."); return; }
         const res = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaType.Images,
             allowsEditing: true, quality: 0.85,
         });
         if (!res.canceled && res.assets) {
@@ -433,7 +433,7 @@ export default function SellScreen() {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") { Alert.alert("Permission needed","Allow photo library access."); return; }
         const res = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaType.Images,
             allowsMultipleSelection: true, quality: 0.85,
             selectionLimit: 10 - images.length,
         });
@@ -450,8 +450,8 @@ export default function SellScreen() {
             : await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") { Alert.alert("Permission needed","Allow photo access."); return; }
         const res = fromCamera
-            ? await ImagePicker.launchCameraAsync({ mediaTypes:ImagePicker.MediaTypeOptions.Images, allowsEditing:true, quality:0.9 })
-            : await ImagePicker.launchImageLibraryAsync({ mediaTypes:ImagePicker.MediaTypeOptions.Images, quality:0.9 });
+            ? await ImagePicker.launchCameraAsync({ mediaTypes:ImagePicker.MediaType.Images, allowsEditing:true, quality:0.9 })
+            : await ImagePicker.launchImageLibraryAsync({ mediaTypes:ImagePicker.MediaType.Images, quality:0.9 });
         if (!res.canceled && res.assets?.[0]) {
             const a = res.assets[0];
             setAiImage({ id: Math.random().toString(36).slice(2), uri: a.uri });
@@ -462,7 +462,7 @@ export default function SellScreen() {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") return;
         const res = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaType.Images,
             allowsMultipleSelection: true, quality:0.85,
             selectionLimit: 9 - aiExtraImages.length,
         });
