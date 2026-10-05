@@ -539,26 +539,72 @@ export default function SellScreen() {
             if (!res.ok || !data.analysis) throw new Error(data.error || 'AI scan failed');
             const a = data.analysis;
             setAiAnalysis(a);
-            // Pre-fill form from AI response
-            setAiFormRaw({
-                title:       a.title || '',
-                description: a.description || '',
-                category:    a.category || a.subcategory || '',
-                subcategory: a.subcategory || '',
-                brand:       a.brand || '',
-                model:       a.model || '',
-                condition:   a.condition || '',
-                price:       a.price_min ? String(Math.round((a.price_min + (a.price_max || a.price_min)) / 2)) : '',
-                locationRegion: '', locationCity:'', location:'',
+
+            // ── Map AI response → manual form state (same fields used in manual flow)
+            // This makes AI review use the EXACT same forms as the manual create listing
+            const avgPrice = a.price_min
+                ? String(Math.round((a.price_min + (a.price_max || a.price_min)) / 2))
+                : '';
+
+            // Map AI category to a matching cat slug used by CAT_FIELDS
+            const rawCat = (a.category || a.subcategory || '').toLowerCase().replace(/\s+/g, '-');
+            const catMap: Record<string,string> = {
+                'electronics': 'electronics', 'technology': 'electronics',
+                'phones': 'mobile-phones', 'mobile-phones': 'mobile-phones', 'smartphones': 'mobile-phones',
+                'laptops': 'laptops', 'computers': 'laptops',
+                'vehicles': 'vehicles', 'cars': 'vehicles',
+                'fashion': 'fashion', 'clothing': 'fashion',
+                'property': 'property', 'real-estate': 'property',
+            };
+            const catSlugAi = Object.keys(catMap).find(k => rawCat.includes(k))
+                ? catMap[Object.keys(catMap).find(k => rawCat.includes(k))!]
+                : rawCat;
+
+            // Populate main form fields
+            setFormRaw(prev => ({
+                ...prev,
+                title:       a.title       || prev.title,
+                description: a.description || prev.description,
+                category:    catSlugAi,
+                subcategory: a.subcategory || catSlugAi,
+                condition:   a.condition   || prev.condition,
+                price:       avgPrice      || prev.price,
                 is_negotiable: true,
-            });
-            // Populate specs from all returned AI fields
-            const specs: Record<string,string> = {};
-            const specKeys = ['storage','ram','screenSize','displayType','operatingSystem','battery','mainCamera','selfieCamera','processor','simType','cardSlot','color','year','mileage','bodyType','transmission','fuelType','gpu'];
-            specKeys.forEach(k => { if ((a as any)[k]) specs[k] = String((a as any)[k]); });
-            if (a.specifications) Object.entries(a.specifications).forEach(([k,v])=>{ specs[k]=String(v); });
-            setAiSpecs(specs);
-            setAiStep('review');
+            }));
+
+            // Populate dynVals with AI spec fields that match CAT_FIELDS keys exactly
+            const dynMap: Record<string, string> = {};
+            if (a.storage)            dynMap['storage']    = a.storage;
+            if (a.ram)                dynMap['ram']        = a.ram;
+            if (a.screenSize)         dynMap['screenSize'] = a.screenSize;
+            if (a.operatingSystem)    dynMap['os']         = a.operatingSystem;
+            if (a.battery)            dynMap['battery']    = a.battery;
+            if (a.processor)          dynMap['processor']  = a.processor;
+            if (a.simType)            dynMap['simType']    = a.simType;
+            if (a.color)              dynMap['color']      = a.color;
+            if (a.year)               dynMap['year']       = String(a.year);
+            if (a.mileage)            dynMap['mileage']    = String(a.mileage);
+            if (a.bodyType)           dynMap['bodyType']   = a.bodyType;
+            if (a.transmission)       dynMap['transmission'] = a.transmission;
+            if (a.fuelType)           dynMap['fuelType']   = a.fuelType;
+            if (a.brand)              dynMap['brand']      = a.brand;
+            if (a.model)              dynMap['model']      = a.model;
+            if (a.condition)          dynMap['condition']  = a.condition;
+            if (a.features?.length)   dynMap['features']   = JSON.stringify(a.features);
+            if (a.specifications) {
+                Object.entries(a.specifications).forEach(([k,v]) => { dynMap[k] = String(v); });
+            }
+            setDynVals(dynMap);
+
+            // Add AI image to the listing images array
+            const newImgs: {id:string;uri:string}[] = [];
+            if (aiImage) newImgs.push(aiImage);
+            aiExtraImages.forEach(img => newImgs.push(img));
+            if (newImgs.length) setImages(newImgs);
+
+            // Switch to manual mode at Step 0 — user reviews the pre-filled forms
+            setMode('manual');
+            setStep(0);
         } catch(err:any) {
             setAiError(err.message || 'AI could not analyze the image.');
             setAiStep('review'); // Let user fill manually
